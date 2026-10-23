@@ -1,0 +1,504 @@
+/* ============================================
+   ABOUT PAGE — Shree Sakhi Events
+   ============================================ */
+
+/* ── Hero ── */
+.about-hero {
+  position: relative;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  padding: 8rem 0 4rem;
+  overflow: hidden;
+}
+
+.about-hero__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.about-hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+
+.about-hero__orb--1 {
+  width: 600px; height: 600px;
+  background: radial-gradient(ellipse, rgba(194,24,91,0.2) 0%, transparent 70%);
+  top: -200px; left: -100px;
+}
+
+.about-hero__orb--2 {
+  width: 500px; height: 500px;
+  background: radial-gradient(ellipse, rgba(245,158,11,0.12) 0%, transparent 70%);
+  bottom: -150px; right: -80px;
+}
+
+.about-hero__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(194,24,91,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(194,24,91,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.about-hero__content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.about-hero__title {
+  margin-bottom: 1.25rem;
+  max-width: 700px;
+}
+
+.about-hero__subtitle {
+  max-width: 620px;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  line-height: 1.8;
+  margin-bottom: 2rem;
+}
+
+.about-hero__divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.about-hero__divider-flower {
+  font-size: 2rem;
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ── Scroll Reveal ── */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Generic Section ── */
+.about-section {
+  padding: var(--space-4xl) 0;
+}
+
+/* ── Introduction ── */
+.about-intro {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.about-intro__text h2 {
+  margin-bottom: 1.25rem;
+}
+
+.about-intro__text p {
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.about-intro__actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.about-intro__visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: 440px;
+}
+
+/* ── Stats ── */
+.about-stats {
+  padding: var(--space-3xl) 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.about-stats__grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1.5rem;
+}
+
+.about-stat-card {
+  padding: 2rem 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--transition-slow);
+}
+
+.about-stat-card:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-glow);
+}
+
+.about-stat-card__icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.about-stat-card__num {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+}
+
+.about-stat-card__label {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+/* ── Vision / Mission Section ── */
+.about-vm-section {
+  position: relative;
+  padding: var(--space-4xl) 0;
+  overflow: hidden;
+}
+
+.about-vision {
+  background: linear-gradient(135deg, rgba(194,24,91,0.04) 0%, rgba(136,14,79,0.02) 100%);
+  border-top: 1px solid rgba(194,24,91,0.1);
+  border-bottom: 1px solid rgba(194,24,91,0.1);
+}
+
+.about-mission {
+  background: linear-gradient(135deg, rgba(245,158,11,0.04) 0%, rgba(180,83,9,0.02) 100%);
+  border-top: 1px solid rgba(245,158,11,0.1);
+  border-bottom: 1px solid rgba(245,158,11,0.1);
+}
+
+.about-vm-section__bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(194,24,91,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.about-vm-section__inner {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+.about-vm-section__inner--reverse {
+  grid-template-columns: 140px 1fr;
+}
+
+.about-vm-section__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  background: rgba(194,24,91,0.08);
+  border: 1.5px solid rgba(194,24,91,0.2);
+  border-radius: var(--radius-xl);
+  flex-shrink: 0;
+}
+
+.about-vm-section__badge--gold {
+  background: rgba(245,158,11,0.08);
+  border-color: rgba(245,158,11,0.2);
+}
+
+.about-vm-section__content h2 {
+  margin: 0.5rem 0 1.25rem;
+}
+
+.about-vm-section__lead {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  max-width: 700px;
+  margin-bottom: 1.75rem;
+}
+
+.about-vm-section__points {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.about-vm-section__point {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.about-vm-section__point-dot {
+  color: var(--color-primary-light);
+  font-size: 0.7rem;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+/* Mission pillars */
+.mission-pillars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.mission-pillar {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: rgba(245,158,11,0.04);
+  border: 1px solid rgba(245,158,11,0.12);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+
+.mission-pillar:hover {
+  border-color: rgba(245,158,11,0.25);
+  background: rgba(245,158,11,0.08);
+  transform: translateY(-2px);
+}
+
+.mission-pillar__icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.mission-pillar__title {
+  display: block;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  margin-bottom: 0.3rem;
+}
+
+.mission-pillar__desc {
+  font-size: 0.83rem;
+  line-height: 1.6;
+  color: var(--color-text-subtle);
+}
+
+/* ── Values ── */
+.about-values {
+  background: var(--color-surface);
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+
+.value-card {
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.value-card__icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.value-card__title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--color-text);
+}
+
+.value-card__desc {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+/* ── Founder ── */
+.about-founder {
+  position: relative;
+  padding: var(--space-4xl) 0;
+  overflow: hidden;
+}
+
+.about-founder__bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(194,24,91,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.about-founder__card {
+  position: relative;
+  border-radius: var(--radius-xl);
+  padding: 3rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 2.5rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.about-founder__avatar {
+  flex-shrink: 0;
+}
+
+.about-founder__text {
+  flex: 1;
+}
+
+.about-founder__quote {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1.75;
+  color: var(--color-text);
+  font-style: italic;
+  margin: 1rem 0 1.5rem;
+  border-left: 3px solid;
+  border-image: var(--grad-primary) 1;
+  padding-left: 1.5rem;
+}
+
+.about-founder__name {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primary-light);
+  font-style: normal;
+}
+
+/* ── CTA ── */
+.about-cta {
+  padding: var(--space-4xl) 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.about-cta__inner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.about-cta__title {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.about-cta__desc {
+  max-width: 540px;
+  font-size: 1.05rem;
+}
+
+.about-cta__actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── Section Header shared ── */
+.section-header {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.section-header h2 { margin-bottom: 0.75rem; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .about-stats__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .values-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .about-hero { padding: 7rem 0 3rem; min-height: auto; }
+
+  .about-intro {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .about-intro__visual { max-height: 240px; }
+
+  .about-stats__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .about-vm-section__inner,
+  .about-vm-section__inner--reverse {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .about-vm-section__badge { width: 80px; height: 80px; }
+
+  .mission-pillars {
+    grid-template-columns: 1fr;
+  }
+
+  .values-grid { grid-template-columns: 1fr; }
+
+  .about-founder__card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+  .about-founder__quote { padding-left: 1rem; }
+}
+
+@media (max-width: 480px) {
+  .about-stats__grid { grid-template-columns: repeat(2, 1fr); }
+  .about-cta__actions { flex-direction: column; align-items: stretch; }
+}

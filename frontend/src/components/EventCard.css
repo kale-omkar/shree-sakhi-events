@@ -1,0 +1,191 @@
+/* EventCard */
+.event-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  cursor: default;
+}
+
+/* Image */
+.event-card__image-wrap {
+  position: relative;
+  overflow: hidden;
+  height: 200px;
+  flex-shrink: 0;
+}
+.event-card__image {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.event-card:hover .event-card__image { transform: scale(1.06); }
+
+.event-card__image-placeholder {
+  width: 100%; height: 100%;
+  background: var(--color-surface-2);
+}
+.event-card__image-placeholder svg { width: 100%; height: 100%; }
+
+/* Overlay */
+.event-card__overlay {
+  position: absolute;
+  top: 0.75rem; left: 0.75rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.event-card__featured-tag {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-gold);
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+}
+
+.event-card__type-tag {
+  position: absolute;
+  bottom: 0.75rem; right: 0.75rem;
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: rgba(10,10,15,0.7);
+  backdrop-filter: blur(8px);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-full);
+}
+
+/* Body */
+.event-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1.25rem;
+  flex: 1;
+}
+
+/* Status */
+.event-card__status { display: flex; }
+
+.badge-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-dot 1.5s ease infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.8); }
+}
+
+/* Name */
+.event-card__name {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Description */
+.event-card__desc {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.6;
+  flex: 1;
+}
+
+/* Meta */
+.event-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.event-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--color-text-subtle);
+}
+.event-card__meta-item svg { flex-shrink: 0; color: var(--color-primary); }
+.event-card__meta-item span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Capacity */
+.event-card__capacity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.event-card__capacity-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--color-text-subtle);
+  font-family: var(--font-ui);
+}
+.event-card__capacity-bar {
+  height: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.event-card__capacity-fill {
+  height: 100%;
+  background: var(--grad-primary);
+  border-radius: var(--radius-full);
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.event-card__capacity-fill[data-full="true"] {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* Actions */
+.event-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+
+/* Featured variant */
+.event-card--featured {
+  border-color: rgba(245,158,11,0.25);
+}
+.event-card--featured:hover {
+  border-color: rgba(245,158,11,0.5);
+  box-shadow: 0 8px 40px rgba(245,158,11,0.1), 0 0 0 1px rgba(245,158,11,0.2);
+}
+.event-card--featured .event-card__image-wrap { height: 220px; }
+
+/* Past variant */
+.event-card--past {
+  opacity: 0.8;
+}
+.event-card--past .event-card__image-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10,10,15,0.35);
+}
