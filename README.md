@@ -47,6 +47,7 @@ event-management-website/
 │   │   └── SakhiEventsApplication.java
 │   ├── src/main/resources/
 │   │   └── application.properties
+│   ├── .env.example             # Backend-specific template
 │   ├── pom.xml
 │   └── mvnw / mvnw.cmd
 │
@@ -61,6 +62,7 @@ event-management-website/
 │   ├── package.json
 │   └── vite.config.js
 │
+├── .env.example                 # Root environment template
 ├── .gitignore
 └── README.md
 ```
@@ -74,19 +76,31 @@ event-management-website/
 - Node.js 18+ and npm
 - MySQL 8.0+ running locally
 
-### 1. Database Configuration
-Open MySQL and ensure you have a user with privileges to create databases, or create the database manually:
+### 1. Database & Environment Setup
+Ensure MySQL is running and create the database if it doesn't exist:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS sakhi_events_db;
 ```
 
-Update your database credentials in `backend/src/main/resources/application.properties` (or via environment variables):
+Copy the `.env.example` file to create your local `.env`:
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/sakhi_events_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true
-spring.datasource.username=root
-spring.datasource.password=your_password
+```bash
+# On Linux/macOS
+cp .env.example .env
+
+# On Windows PowerShell
+copy .env.example .env
+```
+
+Open `.env` and configure your local MySQL password and settings:
+
+```env
+SERVER_PORT=8080
+DB_URL=jdbc:mysql://localhost:3306/sakhi_events_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true
+DB_USERNAME=root
+DB_PASSWORD=your_mysql_password
+admin.api.key=sakhi-admin-2026
 ```
 
 ### 2. Run Backend
