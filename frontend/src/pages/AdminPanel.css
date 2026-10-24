@@ -148,9 +148,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem 2.5rem;
-  background: rgba(18, 18, 26, 0.7);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 4px 20px rgba(79, 6, 109, 0.04);
 }
 
 .admin-header__left {
@@ -167,13 +169,14 @@
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-plum);
   line-height: 1.2;
 }
 
 .admin-header__sub {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: var(--color-text-muted);
+  font-weight: 500;
 }
 
 .admin-header__right {

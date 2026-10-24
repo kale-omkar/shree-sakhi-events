@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { COMPANY_INFO } from '../constants/companyInfo';
 import './Navbar.css';
 
 const NAV_LINKS = [
   { label: 'Home',  to: '/' },
-  { label: 'About', to: '/about' },
+  { label: 'About Us', to: '/about' },
   {
     label: 'Events',
     to: '/events',
@@ -14,21 +15,21 @@ const NAV_LINKS = [
         to: '/events',
         icon: '🎪',
         badge: 'All',
-        desc: 'Explore all exhibitions & celebrations'
+        desc: 'Explore all exhibitions & events'
       },
       {
         label: 'Upcoming Events',
         to: '/upcoming-events',
         icon: '🟢',
         badge: 'Upcoming',
-        desc: 'Upcoming dates & bookings'
+        desc: 'Upcoming exhibition dates & details'
       },
       {
-        label: 'Past Events & Portfolio',
+        label: 'Past Exhibitions',
         to: '/past-events',
         icon: '🏆',
         badge: 'Archive',
-        desc: 'Past events, photo gallery & memories'
+        desc: 'Previous exhibitions & sponsor records'
       },
     ],
   },
@@ -36,14 +37,14 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
-  const [scrolled, setScrolled]   = useState(false);
-  const [menuOpen, setMenuOpen]   = useState(false);
-  const [openDrop, setOpenDrop]   = useState(null); // which dropdown is active
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openDrop, setOpenDrop] = useState(null);
   const location = useLocation();
   const menuRef  = useRef(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 25);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -73,129 +74,124 @@ export default function Navbar() {
     return location.pathname === link.to;
   };
 
+  const primaryWhatsApp = COMPANY_INFO.whatsappNumbers[0];
+
   return (
-    <nav
+    <header
       className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}
-      role="navigation"
-      aria-label="Main navigation"
+      role="banner"
       ref={menuRef}
     >
       <div className="container navbar__inner">
 
-        {/* ── Brand Logo ── */}
+        {/* ── Official Brand Logo ── */}
         <Link to="/" className="navbar__logo" aria-label="Shree Sakhi Events — Home">
-          <div className="navbar__logo-icon" aria-hidden="true">
-            <svg width="40" height="40" viewBox="0 0 36 36" fill="none">
-              <circle cx="18" cy="18" r="17" stroke="url(#nav-brand-stroke)" strokeWidth="1.75"/>
-              {/* Stylized Lotus Petals */}
-              <path
-                d="M18 5 C11 5 8 13 13 17 C8 19 11 31 18 31 C25 31 28 19 23 17 C28 13 25 5 18 5Z"
-                fill="url(#nav-brand-fill)"
-                opacity="0.95"
-              />
-              <circle cx="18" cy="17" r="3.2" fill="#ffffff" opacity="0.8"/>
-              <defs>
-                <linearGradient id="nav-brand-stroke" x1="0" y1="0" x2="36" y2="36">
-                  <stop offset="0%" stopColor="#c2185b"/>
-                  <stop offset="100%" stopColor="#f59e0b"/>
-                </linearGradient>
-                <linearGradient id="nav-brand-fill" x1="0" y1="0" x2="36" y2="36">
-                  <stop offset="0%" stopColor="#e91e8c"/>
-                  <stop offset="100%" stopColor="#f59e0b"/>
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <div className="navbar__logo-text">
-            <span className="navbar__logo-name">Shree Sakhi</span>
-            <span className="navbar__logo-sub">Events</span>
-          </div>
+          <img
+            src="/shree-sakhi-logo-trimmed.png"
+            alt="Shree Sakhi Events Logo"
+            className="navbar__logo-img"
+          />
         </Link>
 
         {/* ── Desktop Navigation Links ── */}
-        <ul className="navbar__links" role="list">
-          {NAV_LINKS.map((link) => {
-            const hasDrop = !!link.dropdown;
-            const isOpen = openDrop === link.to;
-            const active = isLinkActive(link);
+        <nav aria-label="Main Navigation">
+          <ul className="navbar__links" role="list">
+            {NAV_LINKS.map((link) => {
+              const hasDrop = !!link.dropdown;
+              const isOpen = openDrop === link.to;
+              const active = isLinkActive(link);
 
-            return (
-              <li
-                key={link.to}
-                className={`navbar__item ${hasDrop ? 'navbar__item--has-dropdown' : ''}`}
-                onMouseEnter={() => hasDrop && setOpenDrop(link.to)}
-                onMouseLeave={() => hasDrop && setOpenDrop(null)}
-              >
-                {hasDrop ? (
-                  <button
-                    type="button"
-                    className={`navbar__link navbar__link--btn ${active ? 'navbar__link--active' : ''}`}
-                    onClick={() => setOpenDrop(isOpen ? null : link.to)}
-                    aria-haspopup="true"
-                    aria-expanded={isOpen}
-                    id="nav-dropdown-trigger"
-                  >
-                    <span>{link.label}</span>
-                    <ChevronIcon className={`navbar__chevron ${isOpen ? 'navbar__chevron--open' : ''}`} />
-                  </button>
-                ) : (
-                  <Link
-                    to={link.to}
-                    className={`navbar__link ${active ? 'navbar__link--active' : ''}`}
-                  >
-                    {link.label}
-                  </Link>
-                )}
+              return (
+                <li
+                  key={link.to}
+                  className={`navbar__item ${hasDrop ? 'navbar__item--has-dropdown' : ''}`}
+                  onMouseEnter={() => hasDrop && setOpenDrop(link.to)}
+                  onMouseLeave={() => hasDrop && setOpenDrop(null)}
+                >
+                  {hasDrop ? (
+                    <button
+                      type="button"
+                      className={`navbar__link navbar__link--btn ${active ? 'navbar__link--active' : ''}`}
+                      onClick={() => setOpenDrop(isOpen ? null : link.to)}
+                      aria-haspopup="true"
+                      aria-expanded={isOpen}
+                      id="nav-dropdown-trigger"
+                    >
+                      <span>{link.label}</span>
+                      <ChevronIcon className={`navbar__chevron ${isOpen ? 'navbar__chevron--open' : ''}`} />
+                    </button>
+                  ) : (
+                    <Link
+                      to={link.to}
+                      className={`navbar__link ${active ? 'navbar__link--active' : ''}`}
+                    >
+                      {link.label}
+                    </Link>
+                  )}
 
-                {/* Dropdown Menu Popup */}
-                {hasDrop && (
-                  <div
-                    className={`navbar__dropdown ${isOpen ? 'navbar__dropdown--open' : ''}`}
-                    role="menu"
-                    aria-label={`${link.label} options`}
-                  >
-                    <div className="navbar__dropdown-header">
-                      <span>Explore Events</span>
-                    </div>
-                    <div className="navbar__dropdown-list">
-                      {link.dropdown.map((sub) => {
-                        const isSubActive = location.pathname === sub.to;
-                        return (
-                          <Link
-                            key={sub.to}
-                            to={sub.to}
-                            className={`navbar__dropdown-item ${isSubActive ? 'navbar__dropdown-item--active' : ''}`}
-                            role="menuitem"
-                            onClick={() => setOpenDrop(null)}
-                          >
-                            <span className="navbar__dropdown-icon" aria-hidden="true">{sub.icon}</span>
-                            <div className="navbar__dropdown-content">
-                              <div className="navbar__dropdown-title-row">
-                                <span className="navbar__dropdown-title">{sub.label}</span>
-                                {sub.badge && <span className="navbar__dropdown-badge">{sub.badge}</span>}
+                  {/* Dropdown Menu Popup */}
+                  {hasDrop && (
+                    <div
+                      className={`navbar__dropdown ${isOpen ? 'navbar__dropdown--open' : ''}`}
+                      role="menu"
+                      aria-label={`${link.label} options`}
+                    >
+                      <div className="navbar__dropdown-header">
+                        <span>Exhibitions & Events</span>
+                      </div>
+                      <div className="navbar__dropdown-list">
+                        {link.dropdown.map((sub) => {
+                          const isSubActive = location.pathname === sub.to;
+                          return (
+                            <Link
+                              key={sub.to}
+                              to={sub.to}
+                              className={`navbar__dropdown-item ${isSubActive ? 'navbar__dropdown-item--active' : ''}`}
+                              role="menuitem"
+                              onClick={() => setOpenDrop(null)}
+                            >
+                              <span className="navbar__dropdown-icon" aria-hidden="true">{sub.icon}</span>
+                              <div className="navbar__dropdown-content">
+                                <div className="navbar__dropdown-title-row">
+                                  <span className="navbar__dropdown-title">{sub.label}</span>
+                                  {sub.badge && <span className="navbar__dropdown-badge">{sub.badge}</span>}
+                                </div>
+                                <span className="navbar__dropdown-desc">{sub.desc}</span>
                               </div>
-                              <span className="navbar__dropdown-desc">{sub.desc}</span>
-                            </div>
-                          </Link>
-                        );
-                      })}
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-        {/* ── Primary Action Button ── */}
+        {/* ── Primary Action Buttons (Enquiry & Booking) ── */}
         <div className="navbar__actions">
+          {/* Enquiry Button via WhatsApp / Call */}
+          <a
+            href={`https://wa.me/91${primaryWhatsApp}?text=Hello%20Shree%20Sakhi%20Events,%20I%20have%20an%20enquiry%20regarding%20stalls%20and%20events`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-outline btn-sm navbar__enquiry-btn"
+            aria-label="Send Enquiry via WhatsApp"
+            id="navbar-enquiry-btn"
+          >
+            <span>💬 Enquiry</span>
+          </a>
+
+          {/* Booking Button linking to Registration module */}
           <Link
             to="/register"
-            className="btn btn-primary btn-sm navbar__cta"
-            aria-label="Register for an event"
+            className="btn btn-primary btn-sm navbar__booking-btn"
+            aria-label="Book a stall or register for an event"
             id="navbar-register-btn"
           >
-            Register Now
+            Book Stalls / Register
           </Link>
 
           {/* ── Mobile Hamburger Toggle ── */}
@@ -218,7 +214,7 @@ export default function Navbar() {
         aria-hidden={!menuOpen}
       >
         <div className="container navbar__mobile-inner">
-          <ul role="list">
+          <ul role="list" className="navbar__mobile-links">
             {NAV_LINKS.map(link => (
               <li key={link.to}>
                 {link.dropdown ? (
@@ -257,20 +253,32 @@ export default function Navbar() {
                 )}
               </li>
             ))}
-            <li className="navbar__mobile-cta-item">
+
+            {/* Mobile Actions */}
+            <li className="navbar__mobile-actions">
+              <a
+                href={`https://wa.me/91${primaryWhatsApp}?text=Hello%20Shree%20Sakhi%20Events,%20I%20have%20an%20enquiry`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline"
+                style={{ width: '100%', justifyContent: 'center' }}
+                id="mobile-enquiry-btn"
+              >
+                💬 WhatsApp Enquiry
+              </a>
               <Link
                 to="/register"
                 className="btn btn-primary"
                 style={{ width: '100%', justifyContent: 'center' }}
                 id="mobile-register-btn"
               >
-                Register Now
+                Book Stalls / Register
               </Link>
             </li>
           </ul>
         </div>
       </div>
-    </nav>
+    </header>
   );
 }
 

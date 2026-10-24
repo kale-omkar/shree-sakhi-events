@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import EventsPage from './pages/EventsPage';
@@ -41,30 +42,6 @@ function NotFound() {
       <p style={{ color:'var(--color-text-muted)', marginBottom:'2rem' }}>The page you're looking for doesn't exist.</p>
       <a href="/" className="btn btn-primary">Go Home</a>
     </main>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="site-footer" role="contentinfo">
-      <div className="container site-footer__inner">
-        <div className="site-footer__brand">
-          <span className="site-footer__name">Shree Sakhi Events</span>
-          <span className="site-footer__tagline">Celebrating Women Through Culture, Creativity & Community</span>
-        </div>
-        <div className="site-footer__links">
-          <a href="/events"          className="site-footer__link">All Events</a>
-          <a href="/upcoming-events" className="site-footer__link">Upcoming</a>
-          <a href="/past-events"     className="site-footer__link">Past & Portfolio</a>
-          <a href="/about"           className="site-footer__link">About Us</a>
-          <a href="/register"        className="site-footer__link">Register</a>
-          <a href="/admin"           className="site-footer__link" style={{ opacity: 0.7 }}>Admin Portal</a>
-        </div>
-        <div className="site-footer__copy">
-          © {new Date().getFullYear()} Shree Sakhi Events, Nashik. All rights reserved.
-        </div>
-      </div>
-    </footer>
   );
 }
 
