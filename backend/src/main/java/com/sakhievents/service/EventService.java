@@ -62,137 +62,83 @@ public class EventService {
         return eventRepository.save(event);
     }
 
-    // Seed initial demo events into the database if empty
+    /**
+     * Seeds initial historical exhibition data into the database if empty.
+     * Sourced strictly from the official 'Details About Shree Sakhi Events' PDF.
+     * Only historical exhibitions with verified dates and venues are seeded.
+     * The 26-27 September event is excluded because its year is unconfirmed.
+     * No fictional upcoming exhibitions are seeded.
+     */
     public void seedEventsIfEmpty() {
         if (eventRepository.count() > 0) return;
 
-        // Event 1 - Nashik Exhibition (Ongoing/Upcoming - main featured event)
-        Event nashikExhibition = new Event();
-        nashikExhibition.setName("Nashik Mahila Udyog Mela 2026");
-        nashikExhibition.setDescription(
-            "Shree Sakhi Events proudly presents the Nashik Mahila Udyog Mela 2026 — a grand two-month exhibition celebrating women entrepreneurs from Nashik and beyond. " +
-            "This exclusive platform brings together talented women artisans, home-based businesses, self-help groups, and women-led startups to showcase their products and services. " +
-            "Visitors can explore a wide range of handmade crafts, organic foods, fashion, jewellery, home decor, and much more — all created by women for the world. " +
-            "A spectacular celebration of women's empowerment, creativity, and business spirit."
+        // Historical Exhibition 1: 23-24 August 2025 @ Patidar Bhavan
+        Event exhibition1 = new Event();
+        exhibition1.setName("Grand Exhibition @ Patidar Bhavan");
+        exhibition1.setDescription(
+            "Shree Sakhi Events proudly hosted its Grand Exhibition on 23rd & 24th August 2025, at Patidar Bhavan, " +
+            "Nashik Road, Nashik bringing together talented entrepreneurs, shoppers under one roof. With an incredible " +
+            "footfall of 2,500+ visitors and 65+ stalls, the exhibition created a vibrant platform for women entrepreneurs " +
+            "to show with customers, promote their businesses, and turn their dreams into reality. Our exhibition was " +
+            "more than just a shopping event—it was a celebration of women's empowerment, entrepreneurship, creativity, " +
+            "an overwhelming response from visitors and exhibitors made the event a memorable success. " +
+            "Our Valued Sponsors: Main Sponsor: R M Silver | Co-Sponsor: Patole Diagnostic Centre | Associate Sponsor: Food Basket."
         );
-        nashikExhibition.setEventDate(LocalDate.of(2026, 10, 15));
-        nashikExhibition.setEndDate(LocalDate.of(2026, 12, 15));
-        nashikExhibition.setVenue("Nashik Municipal Exhibition Ground");
-        nashikExhibition.setVenueAddress("Near CBS Bus Stand, Nashik, Maharashtra 422001");
-        nashikExhibition.setEventType(Event.EventType.UPCOMING);
-        nashikExhibition.setRegistrationStatus(Event.RegistrationStatus.OPEN);
-        nashikExhibition.setMaxCapacity(5000);
-        nashikExhibition.setRegisteredCount(127);
-        nashikExhibition.setCategory("Exhibition");
-        nashikExhibition.setOrganizer("Shree Sakhi Events");
-        nashikExhibition.setContactEmail("info@sakhievents.com");
-        nashikExhibition.setContactPhone("+91 98765 43210");
-        nashikExhibition.setIsFeatured(true);
-        nashikExhibition.setHighlights(Arrays.asList(
-            "200+ women entrepreneur stalls",
-            "Live cooking demonstrations",
-            "Cultural performances every weekend",
-            "Fashion shows by local designers",
-            "Children's activity zone",
-            "Free entry for all visitors"
+        exhibition1.setEventDate(LocalDate.of(2025, 8, 23));
+        exhibition1.setEndDate(LocalDate.of(2025, 8, 24));
+        exhibition1.setVenue("Patidar Bhavan");
+        exhibition1.setVenueAddress("Patidar Bhavan, Nashik Road, Nashik");
+        exhibition1.setEventType(Event.EventType.PAST);
+        exhibition1.setRegistrationStatus(Event.RegistrationStatus.CLOSED);
+        exhibition1.setMaxCapacity(2500);
+        exhibition1.setRegisteredCount(2500);
+        exhibition1.setCategory("Exhibition");
+        exhibition1.setOrganizer("Shree Sakhi Events");
+        exhibition1.setContactPhone("9145683687");
+        exhibition1.setIsFeatured(true);
+        exhibition1.setHighlights(Arrays.asList(
+            "2,500+ visitor footfall",
+            "65+ women entrepreneur stalls",
+            "Main Sponsor: R M Silver",
+            "Co-Sponsor: Patole Diagnostic Centre",
+            "Associate Sponsor: Food Basket"
         ));
-        nashikExhibition.setTags(Arrays.asList("Exhibition", "Women Empowerment", "Nashik", "Entrepreneurship", "Free Entry"));
-        eventRepository.save(nashikExhibition);
+        exhibition1.setTags(Arrays.asList("Exhibition", "Women Empowerment", "Patidar Bhavan", "Nashik Road", "August 2025"));
+        eventRepository.save(exhibition1);
 
-        // Event 2 - Past Event: Women's Day Celebration 2026
-        Event womensDayCelebration = new Event();
-        womensDayCelebration.setName("Sakhi Samman — Women's Day Celebration 2026");
-        womensDayCelebration.setDescription(
-            "A heartfelt celebration of women's achievements, resilience, and dreams. " +
-            "Sakhi Samman brought together over 500 women from Nashik for an evening of inspiration, awards, cultural performances, and sisterhood. " +
-            "Distinguished women leaders were felicitated for their contributions to society, business, and arts. " +
-            "The event featured motivational talks, dance performances, and a special fashion show by women entrepreneurs."
+        // Historical Exhibition 2: 11-12 October 2025 @ Rajmata Mangal Karyalay
+        Event exhibition2 = new Event();
+        exhibition2.setName("Second Grand Exhibition @ Rajmata Mangal Karyalay");
+        exhibition2.setDescription(
+            "Shree Sakhi Events proudly hosted its Second Grand Exhibition on 11, 12 October 2025 @ Rajmata Mangal Karyalay, " +
+            "Rasbihari Link Road, Meri, Nashik bringing together talented entrepreneurs, shoppers under one roof. With an " +
+            "incredible footfall of 2,500+ visitors and 65+ stalls, the exhibition created a vibrant platform for women entrepreneurs " +
+            "to show with customers, promote their businesses, and turn their dreams into reality. Our exhibition was more than " +
+            "just a shopping event—it was a celebration of women's empowerment, entrepreneurship, creativity, an overwhelming " +
+            "response from visitors and exhibitors made the event a memorable success. " +
+            "Our Valued Sponsors: Title Sponsor: Dr. Nidhi's Multispecialty Clinic | Associated Sponsor: Dhobi Junction."
         );
-        womensDayCelebration.setEventDate(LocalDate.of(2026, 3, 8));
-        womensDayCelebration.setVenue("Hotel Sai Palace Banquet Hall");
-        womensDayCelebration.setVenueAddress("College Road, Nashik, Maharashtra");
-        womensDayCelebration.setEventType(Event.EventType.PAST);
-        womensDayCelebration.setRegistrationStatus(Event.RegistrationStatus.CLOSED);
-        womensDayCelebration.setMaxCapacity(600);
-        womensDayCelebration.setRegisteredCount(543);
-        womensDayCelebration.setCategory("Cultural");
-        womensDayCelebration.setOrganizer("Shree Sakhi Events");
-        womensDayCelebration.setContactEmail("info@sakhievents.com");
-        womensDayCelebration.setContactPhone("+91 98765 43210");
-        womensDayCelebration.setIsFeatured(false);
-        womensDayCelebration.setHighlights(Arrays.asList(
-            "500+ women attendees",
-            "Awards for 25 inspiring women",
-            "Keynote by renowned women leaders",
-            "Cultural dance performances",
-            "Felicitation ceremony"
+        exhibition2.setEventDate(LocalDate.of(2025, 10, 11));
+        exhibition2.setEndDate(LocalDate.of(2025, 10, 12));
+        exhibition2.setVenue("Rajmata Mangal Karyalay");
+        exhibition2.setVenueAddress("Rajmata Mangal Karyalay, Rasbihari Link Road, Meri, Nashik");
+        exhibition2.setEventType(Event.EventType.PAST);
+        exhibition2.setRegistrationStatus(Event.RegistrationStatus.CLOSED);
+        exhibition2.setMaxCapacity(2500);
+        exhibition2.setRegisteredCount(2500);
+        exhibition2.setCategory("Exhibition");
+        exhibition2.setOrganizer("Shree Sakhi Events");
+        exhibition2.setContactPhone("9145683687");
+        exhibition2.setIsFeatured(true);
+        exhibition2.setHighlights(Arrays.asList(
+            "2,500+ visitor footfall",
+            "65+ women entrepreneur stalls",
+            "Title Sponsor: Dr. Nidhi's Multispecialty Clinic",
+            "Associated Sponsor: Dhobi Junction"
         ));
-        womensDayCelebration.setTags(Arrays.asList("Women's Day", "Celebration", "Awards", "Cultural", "Nashik"));
-        eventRepository.save(womensDayCelebration);
+        exhibition2.setTags(Arrays.asList("Exhibition", "Women Empowerment", "Rajmata Mangal Karyalay", "Meri", "October 2025"));
+        eventRepository.save(exhibition2);
 
-        // Event 3 - Past Event: Navratri Utsav 2025
-        Event navratri = new Event();
-        navratri.setName("Sakhi Navratri Utsav 2025");
-        navratri.setDescription(
-            "Nine nights of devotion, dance, and festivity! Sakhi Navratri Utsav 2025 was a spectacular nine-day celebration " +
-            "of the divine feminine with traditional Garba, Dandiya, and cultural performances. " +
-            "Thousands of participants from across Nashik and neighboring cities came together in traditional attire " +
-            "to celebrate the spirit of Navratri. The event featured live music by renowned artists, competitions, and prizes."
-        );
-        navratri.setEventDate(LocalDate.of(2025, 10, 2));
-        navratri.setEndDate(LocalDate.of(2025, 10, 10));
-        navratri.setVenue("Nashik Sports Complex");
-        navratri.setVenueAddress("Gangapur Road, Nashik, Maharashtra");
-        navratri.setEventType(Event.EventType.PAST);
-        navratri.setRegistrationStatus(Event.RegistrationStatus.CLOSED);
-        navratri.setMaxCapacity(10000);
-        navratri.setRegisteredCount(8765);
-        navratri.setCategory("Cultural Festival");
-        navratri.setOrganizer("Shree Sakhi Events");
-        navratri.setContactEmail("info@sakhievents.com");
-        navratri.setContactPhone("+91 98765 43210");
-        navratri.setIsFeatured(false);
-        navratri.setHighlights(Arrays.asList(
-            "9 nights of Garba & Dandiya",
-            "Live music by top artists",
-            "Traditional costume competitions",
-            "8000+ participants",
-            "Special prize distribution"
-        ));
-        navratri.setTags(Arrays.asList("Navratri", "Garba", "Dandiya", "Festival", "Cultural"));
-        eventRepository.save(navratri);
-
-        // Event 4 - Upcoming Workshop
-        Event workshop = new Event();
-        workshop.setName("Women Entrepreneurship Masterclass 2026");
-        workshop.setDescription(
-            "A power-packed one-day masterclass designed exclusively for aspiring and existing women entrepreneurs of Nashik. " +
-            "Learn the secrets of starting, growing, and scaling a successful business from industry experts and successful women business owners. " +
-            "Topics include business planning, digital marketing, financial management, branding, and government schemes for women entrepreneurs. " +
-            "Limited seats — register early to secure your spot!"
-        );
-        workshop.setEventDate(LocalDate.of(2026, 11, 20));
-        workshop.setVenue("Nashik Management Association");
-        workshop.setVenueAddress("Tilak Road, Nashik, Maharashtra 422002");
-        workshop.setEventType(Event.EventType.UPCOMING);
-        workshop.setRegistrationStatus(Event.RegistrationStatus.OPEN);
-        workshop.setMaxCapacity(100);
-        workshop.setRegisteredCount(67);
-        workshop.setCategory("Workshop");
-        workshop.setOrganizer("Shree Sakhi Events");
-        workshop.setContactEmail("info@sakhievents.com");
-        workshop.setContactPhone("+91 98765 43210");
-        workshop.setIsFeatured(true);
-        workshop.setHighlights(Arrays.asList(
-            "Expert speakers from top industries",
-            "Hands-on business planning session",
-            "Networking lunch included",
-            "Certificate of participation",
-            "Government scheme guidance"
-        ));
-        workshop.setTags(Arrays.asList("Workshop", "Entrepreneurship", "Business", "Women", "Learning"));
-        eventRepository.save(workshop);
-
-        System.out.println("✅ Demo events seeded successfully into the database.");
+        System.out.println("✅ Documented historical exhibitions seeded successfully into the database.");
     }
 }

@@ -1,0 +1,231 @@
+/* ==============================================================
+   Footer Component CSS — Shree Sakhi Events
+   Clean, accessible styling using sampled brand colors
+   ============================================================== */
+
+.site-footer {
+  background-color: var(--color-pale-pink);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text);
+  margin-top: var(--space-4xl);
+  padding-top: clamp(3rem, 5vw, 4.5rem);
+  font-family: var(--font-body);
+}
+
+.site-footer__inner {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.25fr 1.4fr;
+  gap: clamp(2rem, 3.5vw, 3.75rem);
+  padding-bottom: clamp(2.5rem, 4vw, 3.5rem);
+}
+
+.site-footer__brand-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.site-footer__logo-link {
+  display: inline-block;
+  width: fit-content;
+}
+
+.site-footer__logo {
+  height: 72px;
+  width: auto;
+  object-fit: contain;
+}
+
+.site-footer__desc {
+  font-size: 0.96rem;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+  max-width: 480px;
+}
+
+.site-footer__location {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--color-plum);
+}
+
+.site-footer__title {
+  font-family: var(--font-ui);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-plum);
+  margin-bottom: var(--space-md);
+  position: relative;
+  letter-spacing: 0.02em;
+}
+
+.site-footer__hint {
+  font-size: 0.85rem;
+  color: var(--color-text-subtle);
+  margin-bottom: var(--space-sm);
+}
+
+.site-footer__nav-list,
+.site-footer__contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.site-footer__link {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+  display: inline-block;
+}
+
+.site-footer__link:hover {
+  color: var(--color-primary);
+  transform: translateX(3px);
+}
+
+.site-footer__contact-item {
+  font-size: 0.92rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(79, 6, 109, 0.08);
+}
+
+.site-footer__contact-name {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.site-footer__phone-link {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.site-footer__phone-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.site-footer__whatsapp-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: var(--space-md);
+}
+
+.site-footer__whatsapp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 1px solid rgba(22, 163, 74, 0.35);
+  color: #15803D;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  width: fit-content;
+}
+
+.site-footer__whatsapp-btn:hover {
+  background: #DCFCE7;
+  border-color: #15803D;
+  transform: translateY(-1px);
+}
+
+.site-footer__email-box {
+  font-size: 0.88rem;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.site-footer__email-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-plum);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.site-footer__email-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  word-break: break-all;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color var(--transition-fast);
+}
+
+.site-footer__email-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.site-footer__bottom {
+  border-top: 1px solid var(--color-border);
+  background: #FFFFFF;
+  padding: var(--space-md) 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.site-footer__bottom-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.site-footer__copy {
+  margin: 0;
+}
+
+.site-footer__admin-link {
+  color: var(--color-text-subtle);
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
+.site-footer__admin-link:hover {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+/* Responsive Footer */
+@media (max-width: 992px) {
+  .site-footer__inner {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xl);
+  }
+}
+
+@media (max-width: 600px) {
+  .site-footer__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+  }
+  .site-footer__bottom-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-xs);
+  }
+}
