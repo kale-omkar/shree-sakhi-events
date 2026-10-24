@@ -32,6 +32,7 @@ const NAV_LINKS = [
       },
     ],
   },
+  { label: 'Contact', to: '/contact' },
   { label: 'Admin', to: '/admin' },
 ];
 

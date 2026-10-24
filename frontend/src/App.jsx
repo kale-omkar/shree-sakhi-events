@@ -8,6 +8,8 @@ import PastEventsPage from './pages/PastEventsPage';
 import EventDetailPage from './pages/EventDetailPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminPanel from './pages/AdminPanel';
+import ContactPage from './pages/ContactPage';
+import EnquiryPage from './pages/EnquiryPage';
 import './App.css';
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
         <Route path="/past-events"      element={<PastEventsPage />} />
         <Route path="/events/:id"       element={<EventDetailPage />} />
         <Route path="/register"         element={<RegisterPage />} />
+        <Route path="/contact"          element={<ContactPage />} />
+        <Route path="/enquiry"          element={<EnquiryPage />} />
         <Route path="/admin"            element={<AdminPanel />} />
         {/* 404 fallback */}
         <Route path="*" element={<NotFound />} />
@@ -57,6 +61,8 @@ function Footer() {
           <a href="/upcoming-events" className="site-footer__link">Upcoming</a>
           <a href="/past-events"     className="site-footer__link">Past & Portfolio</a>
           <a href="/about"           className="site-footer__link">About Us</a>
+          <a href="/contact"         className="site-footer__link">Contact</a>
+          <a href="/enquiry"         className="site-footer__link">Enquiry</a>
           <a href="/register"        className="site-footer__link">Register</a>
           <a href="/admin"           className="site-footer__link" style={{ opacity: 0.7 }}>Admin Portal</a>
         </div>
