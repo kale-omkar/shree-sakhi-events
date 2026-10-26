@@ -1,0 +1,181 @@
+/* BookingConfirmPage.css — Jatin Patil's module */
+
+.confirm-page {
+  min-height: 100svh;
+  background: var(--color-surface-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: var(--space-3xl) var(--space-md) var(--space-4xl);
+}
+
+/* ── Success Icon ── */
+.confirm-icon-wrap {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+  border: 3px solid #10B981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.8rem;
+  margin-bottom: var(--space-xl);
+  animation: scaleIn 0.5s var(--transition-spring);
+  box-shadow: 0 0 0 8px rgba(16,185,129,0.12);
+}
+
+/* ── Card ── */
+.confirm-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 620px;
+  width: 100%;
+  overflow: hidden;
+  animation: fadeUp 0.5s ease;
+  text-align: center;
+}
+
+.confirm-card__hero {
+  background: var(--grad-primary);
+  padding: var(--space-2xl) var(--space-2xl) var(--space-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-card__hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 0%, rgba(223,161,62,0.2) 0%, transparent 60%);
+}
+
+.confirm-card__hero-icon {
+  font-size: 3rem;
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-bottom: var(--space-md);
+  animation: float 3s ease-in-out infinite;
+}
+
+.confirm-card__hero h2 {
+  color: #fff;
+  position: relative;
+  z-index: 1;
+  margin-bottom: var(--space-sm);
+}
+
+.confirm-card__hero p {
+  color: rgba(255,255,255,0.8);
+  position: relative;
+  z-index: 1;
+  font-size: 0.92rem;
+}
+
+/* ── Ref Badge ── */
+.confirm-ref-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--radius-full);
+  margin-top: var(--space-md);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Body ── */
+.confirm-card__body {
+  padding: var(--space-xl) var(--space-2xl);
+}
+
+.confirm-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+  text-align: left;
+}
+
+.confirm-detail {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.confirm-detail__label {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+  margin-bottom: 4px;
+}
+
+.confirm-detail__value {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ── Status Badges ── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-full);
+}
+
+.status-PENDING   { background: #FFFBEB; color: #B45309; border: 1px solid rgba(245,158,11,0.3); }
+.status-CONFIRMED { background: #ECFDF5; color: #047857; border: 1px solid rgba(16,185,129,0.3); }
+.status-CANCELLED { background: #FEF2F2; color: #B91C1C; border: 1px solid rgba(239,68,68,0.25); }
+.pay-PAID         { background: #ECFDF5; color: #047857; border: 1px solid rgba(16,185,129,0.3); }
+.pay-PENDING      { background: #EFF6FF; color: #1D4ED8; border: 1px solid rgba(59,130,246,0.3); }
+.pay-NOT_REQUIRED { background: var(--color-surface-3); color: var(--color-plum); border: 1px solid var(--color-border); }
+.pay-FAILED       { background: #FEF2F2; color: #B91C1C; border: 1px solid rgba(239,68,68,0.25); }
+
+/* ── Actions ── */
+.confirm-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: var(--space-xl);
+}
+
+.confirm-note {
+  background: rgba(220,9,97,0.05);
+  border: 1px solid rgba(220,9,97,0.15);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  font-size: 0.83rem;
+  color: var(--color-primary-dark);
+  line-height: 1.6;
+  margin-top: var(--space-md);
+  text-align: left;
+}
+
+@media (max-width: 600px) {
+  .confirm-details-grid { grid-template-columns: 1fr; }
+  .confirm-card__body { padding: var(--space-lg); }
+  .confirm-card__hero { padding: var(--space-xl) var(--space-lg) var(--space-lg); }
+}
