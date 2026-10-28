@@ -35,6 +35,8 @@ const NAV_LINKS = [
   },
   { label: 'Book Stall', to: '/book' },
   { label: 'Booking Status', to: '/book/status' },
+  { label: 'Contact', to: '/contact' },
+  { label: 'Enquiry', to: '/enquiry' },
   { label: 'Admin', to: '/admin' },
 ];
 
@@ -172,20 +174,8 @@ export default function Navbar() {
           </ul>
         </nav>
 
-        {/* ── Primary Action Buttons (Enquiry & Booking) ── */}
+        {/* ── Primary Action Buttons ── */}
         <div className="navbar__actions">
-          {/* Enquiry Button via WhatsApp / Call */}
-          <a
-            href={`https://wa.me/91${primaryWhatsApp}?text=Hello%20Shree%20Sakhi%20Events,%20I%20have%20an%20enquiry%20regarding%20stalls%20and%20events`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-outline btn-sm navbar__enquiry-btn"
-            aria-label="Send Enquiry via WhatsApp"
-            id="navbar-enquiry-btn"
-          >
-            <span>💬 Enquiry</span>
-          </a>
-
           {/* Booking Button linking to Registration module */}
           <Link
             to="/book"

@@ -3,17 +3,21 @@ package com.sakhievents.controller;
 import com.sakhievents.dto.ApiResponse;
 import com.sakhievents.dto.BookingResponseDTO;
 import com.sakhievents.dto.BookingStatusUpdateDTO;
+import com.sakhievents.exception.UnauthorizedException;
 import com.sakhievents.service.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 
 /**
  * Admin booking endpoints — Jatin Patil's module.
- * Protected by X-Admin-Key header — consistent with existing AdminEventController pattern.
+ * Protected by X-Admin-Key header with secure fail-closed authentication.
  */
 @RestController
 @RequestMapping("/api/admin/bookings")
@@ -25,8 +29,20 @@ import java.util.List;
 )
 public class AdminBookingController {
 
+    private final BookingService bookingService;
+    private final String adminApiKey;
+
+    public AdminBookingController(BookingService bookingService) {
+        this(bookingService, System.getProperty("admin.api.key", ""));
+    }
+
     @Autowired
-    private BookingService bookingService;
+    public AdminBookingController(
+            BookingService bookingService,
+            @Value("${admin.api.key:}") String adminApiKey) {
+        this.bookingService = bookingService;
+        this.adminApiKey = adminApiKey;
+    }
 
     /**
      * GET /api/admin/bookings?eventId=1&status=PENDING
@@ -59,14 +75,32 @@ public class AdminBookingController {
         return ResponseEntity.ok(ApiResponse.success("Booking status updated successfully", updated));
     }
 
-    // ─── Admin key validation — same pattern as AdminEventController ──────────
+    // ─── Secure Admin Key Validation ──────────────────────────────────────────
 
-    private static final String ADMIN_API_KEY =
-            System.getProperty("admin.api.key", "sakhi-admin-2026");
+    private boolean isValidAdminKey(String key) {
+        String configuredKey = (adminApiKey != null && !adminApiKey.isBlank())
+                ? adminApiKey
+                : System.getProperty("admin.api.key");
+
+        // Fail-safe: if admin API key is unconfigured or blank, deny all access
+        if (configuredKey == null || configuredKey.isBlank()) {
+            return false;
+        }
+
+        if (key == null || key.isBlank()) {
+            return false;
+        }
+
+        // Constant-time comparison to mitigate timing attacks
+        return MessageDigest.isEqual(
+                configuredKey.getBytes(StandardCharsets.UTF_8),
+                key.getBytes(StandardCharsets.UTF_8)
+        );
+    }
 
     private void validateAdminKey(String key) {
-        if (key == null || !key.equals(ADMIN_API_KEY)) {
-            throw new RuntimeException("Unauthorised: invalid or missing admin API key");
+        if (!isValidAdminKey(key)) {
+            throw new UnauthorizedException("Unauthorised: invalid or missing admin API key");
         }
     }
 }

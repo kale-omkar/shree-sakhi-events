@@ -13,6 +13,8 @@ import MockPaymentPage from './pages/MockPaymentPage';
 import BookingConfirmPage from './pages/BookingConfirmPage';
 import BookingStatusPage from './pages/BookingStatusPage';
 import AdminPanel from './pages/AdminPanel';
+import ContactPage from './pages/ContactPage';
+import EnquiryPage from './pages/EnquiryPage';
 import './App.css';
 
 function App() {
@@ -20,19 +22,21 @@ function App() {
     <>
       <Navbar />
       <Routes>
-        <Route path="/"                 element={<HomePage />} />
-        <Route path="/about"            element={<AboutPage />} />
-        <Route path="/events"           element={<EventsPage />} />
-        <Route path="/upcoming-events"  element={<UpcomingEventsPage />} />
-        <Route path="/past-events"      element={<PastEventsPage />} />
-        <Route path="/events/:id"       element={<EventDetailPage />} />
-        <Route path="/register"         element={<RegisterPage />} />
-        <Route path="/book"             element={<BookingPage />} />
-        <Route path="/book/pay"         element={<MockPaymentPage />} />
-        <Route path="/book/confirm"     element={<BookingConfirmPage />} />
-        <Route path="/book/status"      element={<BookingStatusPage />} />
-        <Route path="/booking-status"   element={<BookingStatusPage />} />
-        <Route path="/admin"            element={<AdminPanel />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/events" element={<EventsPage />} />
+        <Route path="/upcoming-events" element={<UpcomingEventsPage />} />
+        <Route path="/past-events" element={<PastEventsPage />} />
+        <Route path="/events/:id" element={<EventDetailPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/book" element={<BookingPage />} />
+        <Route path="/book/pay" element={<MockPaymentPage />} />
+        <Route path="/book/confirm" element={<BookingConfirmPage />} />
+        <Route path="/book/status" element={<BookingStatusPage />} />
+        <Route path="/booking-status" element={<BookingStatusPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/enquiry" element={<EnquiryPage />} />
+        <Route path="/admin" element={<AdminPanel />} />
         {/* 404 fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -43,12 +47,12 @@ function App() {
 
 function NotFound() {
   return (
-    <main style={{ minHeight:'100svh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', padding:'2rem' }}>
-      <p style={{ fontSize:'6rem', marginBottom:'1rem' }}>404</p>
-      <h1 style={{ fontFamily:'var(--font-display)', fontSize:'2rem', marginBottom:'1rem', background:'var(--grad-primary)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
+    <main style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem' }}>
+      <p style={{ fontSize: '6rem', marginBottom: '1rem' }}>404</p>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', marginBottom: '1rem', background: 'var(--grad-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
         Page Not Found
       </h1>
-      <p style={{ color:'var(--color-text-muted)', marginBottom:'2rem' }}>The page you're looking for doesn't exist.</p>
+      <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>The page you're looking for doesn't exist.</p>
       <a href="/" className="btn btn-primary">Go Home</a>
     </main>
   );

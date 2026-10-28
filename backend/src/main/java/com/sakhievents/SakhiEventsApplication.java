@@ -48,6 +48,11 @@ public class SakhiEventsApplication {
                             if (System.getProperty(key) == null) {
                                 System.setProperty(key, value);
                             }
+                            if ("ADMIN_API_KEY".equalsIgnoreCase(key) && System.getProperty("admin.api.key") == null) {
+                                System.setProperty("admin.api.key", value);
+                            } else if ("admin.api.key".equalsIgnoreCase(key) && System.getProperty("ADMIN_API_KEY") == null) {
+                                System.setProperty("ADMIN_API_KEY", value);
+                            }
                         }
                     }
                     System.out.println(">>> Loaded environment from: " + envFile.getAbsolutePath());
@@ -61,9 +66,12 @@ public class SakhiEventsApplication {
 
     // Seed demo data on startup if DB is empty
     @Bean
-    public CommandLineRunner seedData(EventService eventService) {
+    public CommandLineRunner seedData(org.springframework.beans.factory.ObjectProvider<EventService> eventServiceProvider) {
         return args -> {
-            eventService.seedEventsIfEmpty();
+            EventService eventService = eventServiceProvider.getIfAvailable();
+            if (eventService != null) {
+                eventService.seedEventsIfEmpty();
+            }
         };
     }
 }
