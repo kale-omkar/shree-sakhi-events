@@ -58,4 +58,12 @@ public class EventController {
         List<EventResponseDTO> events = eventService.searchEvents(keyword);
         return ResponseEntity.ok(ApiResponse.success("Search results", events));
     }
+
+    // GET /api/events/open-for-registration - Events accepting registrations
+    @GetMapping("/open-for-registration")
+    public ResponseEntity<ApiResponse<List<EventResponseDTO>>> getOpenForRegistrationEvents() {
+        List<EventResponseDTO> events = eventService.getOpenForRegistrationEvents();
+        return ResponseEntity.ok(ApiResponse.success("Open-for-registration events fetched", events));
+    }
+
 }

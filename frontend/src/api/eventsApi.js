@@ -7,23 +7,22 @@ const handleResponse = async (res) => {
   if (!data.success) throw new Error(data.message || 'Something went wrong');
   return data.data;
 };
-
-// Events
 export const eventsApi = {
-  getAll:      () => fetch(`${BASE_URL}/events`).then(handleResponse),
-  getById:     (id) => fetch(`${BASE_URL}/events/${id}`).then(handleResponse),
+  getAll: () => fetch(`${BASE_URL}/events`).then(handleResponse),
+  getById: (id) => fetch(`${BASE_URL}/events/${id}`).then(handleResponse),
   getUpcoming: () => fetch(`${BASE_URL}/events/upcoming`).then(handleResponse),
-  getPast:     () => fetch(`${BASE_URL}/events/past`).then(handleResponse),
+  getPast: () => fetch(`${BASE_URL}/events/past`).then(handleResponse),
   getFeatured: () => fetch(`${BASE_URL}/events/featured`).then(handleResponse),
-  search:      (keyword) => fetch(`${BASE_URL}/events/search?keyword=${encodeURIComponent(keyword)}`).then(handleResponse),
+  search: (keyword) => fetch(`${BASE_URL}/events/search?keyword=${encodeURIComponent(keyword)}`).then(handleResponse),
+  getOpenForRegistration: () => fetch(`${BASE_URL}/events/open-for-registration`).then(handleResponse),  // ← ADD THIS
 };
 
 // Registrations
 export const registrationsApi = {
   register: (data) => fetch(`${BASE_URL}/registrations`, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(data),
+    body: JSON.stringify(data),
   }).then(async (res) => {
     const body = await res.json();
     return body; // return full body so we can inspect success/message
