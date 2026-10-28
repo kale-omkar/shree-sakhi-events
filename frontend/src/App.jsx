@@ -8,6 +8,10 @@ import UpcomingEventsPage from './pages/UpcomingEventsPage';
 import PastEventsPage from './pages/PastEventsPage';
 import EventDetailPage from './pages/EventDetailPage';
 import RegisterPage from './pages/RegisterPage';
+import BookingPage from './pages/BookingPage';
+import MockPaymentPage from './pages/MockPaymentPage';
+import BookingConfirmPage from './pages/BookingConfirmPage';
+import BookingStatusPage from './pages/BookingStatusPage';
 import AdminPanel from './pages/AdminPanel';
 import ContactPage from './pages/ContactPage';
 import EnquiryPage from './pages/EnquiryPage';
@@ -25,6 +29,11 @@ function App() {
         <Route path="/past-events" element={<PastEventsPage />} />
         <Route path="/events/:id" element={<EventDetailPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/book" element={<BookingPage />} />
+        <Route path="/book/pay" element={<MockPaymentPage />} />
+        <Route path="/book/confirm" element={<BookingConfirmPage />} />
+        <Route path="/book/status" element={<BookingStatusPage />} />
+        <Route path="/booking-status" element={<BookingStatusPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/enquiry" element={<EnquiryPage />} />
         <Route path="/admin" element={<AdminPanel />} />

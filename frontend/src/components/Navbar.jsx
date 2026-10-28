@@ -33,6 +33,8 @@ const NAV_LINKS = [
       },
     ],
   },
+  { label: 'Book Stall', to: '/book' },
+  { label: 'Booking Status', to: '/book/status' },
   { label: 'Contact', to: '/contact' },
   { label: 'Enquiry', to: '/enquiry' },
   { label: 'Admin', to: '/admin' },
@@ -188,7 +190,7 @@ export default function Navbar() {
 
           {/* Booking Button linking to Registration module */}
           <Link
-            to="/register"
+            to="/book"
             className="btn btn-primary btn-sm navbar__booking-btn"
             aria-label="Book a stall or register for an event"
             id="navbar-register-btn"
@@ -269,7 +271,7 @@ export default function Navbar() {
                 💬 WhatsApp Enquiry
               </a>
               <Link
-                to="/register"
+                to="/book"
                 className="btn btn-primary"
                 style={{ width: '100%', justifyContent: 'center' }}
                 id="mobile-register-btn"

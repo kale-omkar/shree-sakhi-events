@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminEventsApi } from '../api/adminApi';
+import AdminBookingsSection from '../components/AdminBookingsSection';
 import './AdminPanel.css';
 
 const EMPTY_FORM = {
@@ -46,6 +47,7 @@ export default function AdminPanel() {
   const [error, setError]     = useState(null);
 
   // ── UI state ──
+  const [activeTab, setActiveTab] = useState('events'); // 'events' | 'bookings'
   const [view, setView]       = useState('list'); // 'list' | 'form' | 'confirm-delete'
   const [editingEvent, setEditingEvent] = useState(null);
   const [deletingEvent, setDeletingEvent] = useState(null);
@@ -315,12 +317,12 @@ export default function AdminPanel() {
           </div>
         </div>
         <div className="admin-header__right">
-          {view !== 'list' && (
+          {activeTab === 'events' && view !== 'list' && (
             <button className="btn btn-ghost btn-sm" onClick={() => setView('list')} id="admin-back-btn">
               ← Back to List
             </button>
           )}
-          {view === 'list' && (
+          {activeTab === 'events' && view === 'list' && (
             <button className="btn btn-primary btn-sm" onClick={openCreate} id="admin-create-btn">
               + New Event
             </button>
@@ -333,7 +335,33 @@ export default function AdminPanel() {
 
       <div className="admin-body">
 
-        {/* ── Stats bar ── */}
+        {/* ── Tab Switcher: Events vs Bookings ── */}
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
+          <button
+            type="button"
+            className={`btn btn-sm ${activeTab === 'events' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveTab('events')}
+            id="admin-tab-events"
+          >
+            🎪 Events Management
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${activeTab === 'bookings' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveTab('bookings')}
+            id="admin-tab-bookings"
+          >
+            🎟️ Bookings & Stalls
+          </button>
+        </div>
+
+        {activeTab === 'bookings' && (
+          <AdminBookingsSection showToast={showToast} />
+        )}
+
+        {activeTab === 'events' && (
+          <>
+            {/* ── Stats bar ── */}
         {view === 'list' && !loading && !error && (
           <div className="admin-stats">
             {[
@@ -731,6 +759,8 @@ export default function AdminPanel() {
               </div>
             </div>
           </div>
+        )}
+          </>
         )}
 
       </div>
