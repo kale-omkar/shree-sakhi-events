@@ -1,6 +1,6 @@
 // API service — connects React frontend to Spring Boot backend
 
-const BASE_URL = 'http://localhost:8080/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 const handleResponse = async (res) => {
   const data = await res.json();
@@ -31,3 +31,25 @@ export const registrationsApi = {
 
   getByCode: (code) => fetch(`${BASE_URL}/registrations/confirm/${code}`).then(handleResponse),
 };
+
+// Enquiries
+export const enquiriesApi = {
+  submit: (data) =>
+    fetch(`${BASE_URL}/enquiries`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(data),
+    }).then(async (res) => {
+      let body;
+      try {
+        body = await res.json();
+      } catch (err) {
+        body = { success: false, message: `Server returned HTTP ${res.status}` };
+      }
+      return { ...body, status: res.status, ok: res.ok };
+    }),
+
+  getById: (id) => fetch(`${BASE_URL}/enquiries/${id}`).then(handleResponse),
+  getAll:  () => fetch(`${BASE_URL}/enquiries`).then(handleResponse),
+};
+

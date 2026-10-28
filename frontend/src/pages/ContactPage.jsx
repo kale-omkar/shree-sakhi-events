@@ -1,110 +1,74 @@
 import { Link } from 'react-router-dom';
+import { COMPANY_INFO, formatIndianPhone } from '../constants/companyInfo';
 import './ContactPage.css';
 
 /**
- * CONTACT CONFIGURATION OBJECT
- *
- * All company contact details and channels are centralized here.
- * Notice: Due to discrepancies with the company information document,
- * details are currently kept in clearly labeled temporary placeholders
- * with 'isConfirmed: false' until officially verified by the team.
- *
- * Once confirmed:
- * 1. Set isConfirmed: true
- * 2. Update address, phone, email, and WhatsApp numbers.
- * 3. Provide official URLs in socialMedia to activate working social links.
+ * Verified Contact Configuration for Shree Sakhi Events
+ * Sourced strictly from confirmed company details.
  */
 export const COMPANY_CONTACT_CONFIG = {
-  companyName: 'Shree Sakhi Events',
-  tagline: 'Celebrating Women Through Culture, Creativity & Community',
+  companyName: COMPANY_INFO.name,
+  tagline: 'Platform Dedicated to Women Empowerment, Entrepreneurship & Business Growth',
   city: 'Nashik, Maharashtra, India',
 
-  // Address configuration
+  // Registered Office
   address: {
-    isConfirmed: false,
     label: 'Registered Office',
-    displayValue: 'Address Pending Official Confirmation',
-    subText: 'Nashik, Maharashtra, India',
-    statusBadge: 'Pending Confirmation',
-    note: 'Awaiting team verification against official company documents.',
-    googleMapsUrl: null, // Will be set to official Google Maps link once confirmed
+    displayValue: 'Shree Sakhi Events, Nashik Road, Nashik',
+    description: 'Official coordination desk for exhibition stall bookings and event management.',
   },
 
-  // Phone configuration
+  // Phone Helpline
   phone: {
-    isConfirmed: false,
     label: 'Phone Helpline',
-    displayValue: '+91 [Helpline Pending Confirmation]',
-    telNumber: null, // e.g. '+919876543210' once confirmed
-    timings: 'Monday – Saturday: 10:00 AM – 7:00 PM IST',
-    statusBadge: 'Pending Confirmation',
-    note: 'Direct line will be activated once confirmed by company administration.',
+    numbers: [
+      {
+        raw: '9145683687',
+        formatted: formatIndianPhone('9145683687'),
+        telLink: 'tel:+919145683687',
+      },
+      {
+        raw: '9595393434',
+        formatted: formatIndianPhone('9595393434'),
+        telLink: 'tel:+919595393434',
+      },
+    ],
+    description: 'Direct coordinator contact lines for attendee assistance and event inquiries.',
   },
 
-  // Email configuration
+  // Official Email
   email: {
-    isConfirmed: false,
     label: 'Official Email',
-    displayValue: 'email-pending-confirmation@sakhievents.com',
-    mailto: null, // e.g. 'info@sakhievents.com' once confirmed
-    statusBadge: 'Pending Confirmation',
-    note: 'For direct communication and faster tracking, please use the Enquiry Form.',
+    displayValue: 'shreesakhievents26@gmail.com',
+    mailto: 'shreesakhievents26@gmail.com',
+    description: 'Send your partnership proposals, stall inquiries, and general correspondence.',
   },
 
-  // WhatsApp configuration
+  // Official WhatsApp
   whatsapp: {
-    isConfirmed: false,
-    label: 'WhatsApp Quick Chat',
-    displayValue: 'WhatsApp Support (Verification in Progress)',
-    waNumber: null, // Digits only e.g. '919876543210' once confirmed
-    statusBadge: 'Pending Confirmation',
-    defaultMessage: 'Hello Shree Sakhi Events team, I would like to get in touch regarding your events.',
-    note: 'Instant chat will be enabled as soon as the official business number is verified.',
+    label: 'Official WhatsApp',
+    numbers: [
+      {
+        raw: '9145683687',
+        formatted: formatIndianPhone('9145683687'),
+        link: 'https://wa.me/919145683687?text=Hello%20Shree%20Sakhi%20Events%2C%20I%20would%20like%20to%20get%20in%20touch%20regarding%20your%20events.',
+      },
+      {
+        raw: '9595393434',
+        formatted: formatIndianPhone('9595393434'),
+        link: 'https://wa.me/919595393434?text=Hello%20Shree%20Sakhi%20Events%2C%20I%20would%20like%20to%20get%20in%20touch%20regarding%20your%20events.',
+      },
+    ],
+    description: 'Instant chat support for stall reservations, exhibitor queries, and event updates.',
   },
 
-  // Working Hours
-  workingHours: [
-    { days: 'Monday – Friday', hours: '10:00 AM – 7:00 PM IST' },
-    { days: 'Saturday', hours: '10:00 AM – 5:00 PM IST' },
-    { days: 'Sunday', hours: 'Closed (Open during active exhibition weekends)' },
-  ],
-
-  // Social Media Channels
-  // Strict rule: Social links only render as clickable external links when official URLs are available.
-  socialMedia: [
-    {
-      id: 'instagram',
-      name: 'Instagram',
-      handle: '@shreesakhievents',
-      officialUrl: null, // Official URL pending verification
-      isAvailable: false,
-      badgeText: 'Handle Pending Confirmation',
-    },
-    {
-      id: 'facebook',
-      name: 'Facebook',
-      handle: 'Shree Sakhi Events',
-      officialUrl: null, // Official URL pending verification
-      isAvailable: false,
-      badgeText: 'Page Pending Confirmation',
-    },
-    {
-      id: 'youtube',
-      name: 'YouTube',
-      handle: 'Shree Sakhi Events Official',
-      officialUrl: null, // Official URL pending verification
-      isAvailable: false,
-      badgeText: 'Channel Pending Confirmation',
-    },
-    {
-      id: 'linkedin',
-      name: 'LinkedIn',
-      handle: 'Shree Sakhi Events',
-      officialUrl: null, // Official URL pending verification
-      isAvailable: false,
-      badgeText: 'Profile Pending Confirmation',
-    },
-  ],
+  // Key Event Coordinators
+  coordinators: COMPANY_INFO.contactPersons.map((p) => ({
+    name: p.name,
+    phone: p.phone,
+    formatted: formatIndianPhone(p.phone),
+    telLink: `tel:+91${p.phone}`,
+  })),
 };
 
 export default function ContactPage() {
@@ -123,35 +87,35 @@ export default function ContactPage() {
         <div className="container contact-hero__content">
           <div className="section-label animate-fade-up">
             <span className="section-label__dot" aria-hidden="true" />
-            Get in Touch
+            Connect With Us
           </div>
 
           <h1 className="contact-hero__title animate-fade-up delay-100">
-            We’d Love to
-            <span className="text-gradient"> Hear From You</span>
+            We’d Love to <span className="text-gradient">Hear From You</span>
           </h1>
 
           <p className="contact-hero__subtitle animate-fade-up delay-200">
-            Whether you are an aspiring woman entrepreneur, an artisan wanting to book an exhibition
-            stall, a sponsor, or an attendee — the Shree Sakhi Events team is here to assist you.
+            Whether you are an aspiring woman entrepreneur looking to book an exhibition stall,
+            a potential sponsor, or an event attendee — the Shree Sakhi Events team in Nashik is
+            here to assist you.
           </p>
 
-          {/* Verification Status Notice */}
-          <div className="contact-notice animate-fade-up delay-300" role="status">
-            <span className="contact-notice__icon" aria-hidden="true">ℹ️</span>
-            <div className="contact-notice__text">
-              <strong>Official Contact Verification in Progress:</strong> Direct contact channels are
-              currently being aligned with official company documents. For guaranteed priority response,
-              please submit our{' '}
-              <Link to="/enquiry" className="contact-notice__link" id="notice-enquiry-link">
-                Online Enquiry Form →
-              </Link>
-            </div>
+          <div className="contact-hero-actions animate-fade-up delay-300">
+            <Link to="/enquiry" className="btn btn-primary" id="hero-enquiry-link">
+              Submit Space Enquiry →
+            </Link>
+            <a
+              href={`mailto:${config.email.mailto}`}
+              className="btn btn-outline"
+              id="hero-email-link"
+            >
+              Email Coordinator
+            </a>
           </div>
         </div>
       </section>
 
-      {/* ── CONTACT CHANNELS GRID ── */}
+      {/* ── PRIMARY CONTACT CARDS GRID (4 COLUMNS) ── */}
       <section className="contact-section" aria-labelledby="contact-channels-heading">
         <div className="container">
           <div className="section-header">
@@ -159,159 +123,120 @@ export default function ContactPage() {
             <h2 id="contact-channels-heading">
               Our Contact <span className="text-gradient">Information</span>
             </h2>
-            <p>Direct lines and coordination channels for all inquiries</p>
+            <p>Direct lines and verified coordination channels for all inquiries</p>
           </div>
 
           <div className="contact-grid">
-            {/* Card 1: Address */}
+            {/* Card 1: Registered Office */}
             <article className="contact-card card" id="contact-card-address">
               <div className="contact-card__icon-wrap contact-card__icon-wrap--rose">
                 <LocationPinIcon />
               </div>
               <div className="contact-card__body">
-                <div className="contact-card__header">
-                  <h3 className="contact-card__title">{config.address.label}</h3>
-                  <span className="contact-badge contact-badge--pending">
-                    {config.address.statusBadge}
-                  </span>
-                </div>
+                <h3 className="contact-card__title">{config.address.label}</h3>
                 <p className="contact-card__value">{config.address.displayValue}</p>
-                <p className="contact-card__sub">{config.address.subText}</p>
-                <p className="contact-card__note">{config.address.note}</p>
+                <p className="contact-card__desc">{config.address.description}</p>
               </div>
               <div className="contact-card__footer">
-                {config.address.isConfirmed && config.address.googleMapsUrl ? (
-                  <a
-                    href={config.address.googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-outline btn-sm"
-                    id="contact-map-btn"
-                  >
-                    View on Map ↗
-                  </a>
-                ) : (
-                  <span className="contact-card__action-hint">
-                    📍 Location map coordinates will be linked once verified
-                  </span>
-                )}
+                <span className="contact-card__meta-tag">Nashik Road Coordination Desk</span>
               </div>
             </article>
 
-            {/* Card 2: Phone */}
+            {/* Card 2: Phone Helpline */}
             <article className="contact-card card" id="contact-card-phone">
               <div className="contact-card__icon-wrap contact-card__icon-wrap--gold">
                 <PhoneIcon />
               </div>
               <div className="contact-card__body">
-                <div className="contact-card__header">
-                  <h3 className="contact-card__title">{config.phone.label}</h3>
-                  <span className="contact-badge contact-badge--pending">
-                    {config.phone.statusBadge}
-                  </span>
+                <h3 className="contact-card__title">{config.phone.label}</h3>
+                <div className="contact-card__phone-list" role="list">
+                  {config.phone.numbers.map((item) => (
+                    <div key={item.raw} className="contact-card__phone-row" role="listitem">
+                      <a
+                        href={item.telLink}
+                        className="contact-card__phone-link"
+                        id={`contact-phone-link-${item.raw}`}
+                        aria-label={`Call coordinator at ${item.formatted}`}
+                      >
+                        📞 {item.formatted}
+                      </a>
+                    </div>
+                  ))}
                 </div>
-                <p className="contact-card__value">{config.phone.displayValue}</p>
-                <p className="contact-card__sub">🕒 {config.phone.timings}</p>
-                <p className="contact-card__note">{config.phone.note}</p>
+                <p className="contact-card__desc">{config.phone.description}</p>
               </div>
               <div className="contact-card__footer">
-                {config.phone.isConfirmed && config.phone.telNumber ? (
-                  <a
-                    href={`tel:${config.phone.telNumber}`}
-                    className="btn btn-primary btn-sm"
-                    id="contact-phone-call-btn"
-                  >
-                    Call Helpline
-                  </a>
-                ) : (
-                  <span className="contact-card__action-hint">
-                    📞 Helpline dialing disabled pending team confirmation
-                  </span>
-                )}
+                <a
+                  href={config.phone.numbers[0].telLink}
+                  className="btn btn-primary btn-sm contact-card__btn"
+                  id="contact-phone-call-btn"
+                >
+                  Call Primary Line
+                </a>
               </div>
             </article>
 
-            {/* Card 3: Email */}
+            {/* Card 3: Official Email */}
             <article className="contact-card card" id="contact-card-email">
               <div className="contact-card__icon-wrap contact-card__icon-wrap--purple">
                 <EmailIcon />
               </div>
               <div className="contact-card__body">
-                <div className="contact-card__header">
-                  <h3 className="contact-card__title">{config.email.label}</h3>
-                  <span className="contact-badge contact-badge--pending">
-                    {config.email.statusBadge}
-                  </span>
-                </div>
-                <p className="contact-card__value contact-card__value--email">
-                  {config.email.displayValue}
-                </p>
-                <p className="contact-card__sub">📬 24–48 hours turnaround time</p>
-                <p className="contact-card__note">{config.email.note}</p>
-              </div>
-              <div className="contact-card__footer">
-                {config.email.isConfirmed && config.email.mailto ? (
+                <h3 className="contact-card__title">{config.email.label}</h3>
+                <p className="contact-card__value">
                   <a
                     href={`mailto:${config.email.mailto}`}
-                    className="btn btn-outline btn-sm"
-                    id="contact-email-mailto-btn"
+                    className="contact-card__email-link"
+                    id="contact-email-text-link"
+                    aria-label={`Send email to ${config.email.mailto}`}
                   >
-                    Send Email
+                    {config.email.displayValue}
                   </a>
-                ) : (
-                  <Link to="/enquiry" className="btn btn-outline btn-sm" id="contact-email-enquiry-btn">
-                    Use Enquiry Form →
-                  </Link>
-                )}
+                </p>
+                <p className="contact-card__desc">{config.email.description}</p>
+              </div>
+              <div className="contact-card__footer">
+                <a
+                  href={`mailto:${config.email.mailto}`}
+                  className="btn btn-outline btn-sm contact-card__btn"
+                  id="contact-email-mailto-btn"
+                  aria-label={`Send email to ${config.email.mailto}`}
+                >
+                  Send Email ↗
+                </a>
               </div>
             </article>
 
-            {/* Card 4: WhatsApp */}
-            <article className="contact-card card contact-card--highlight" id="contact-card-whatsapp">
+            {/* Card 4: Official WhatsApp */}
+            <article className="contact-card card contact-card--whatsapp" id="contact-card-whatsapp">
               <div className="contact-card__icon-wrap contact-card__icon-wrap--whatsapp">
                 <WhatsAppIcon />
               </div>
               <div className="contact-card__body">
-                <div className="contact-card__header">
-                  <h3 className="contact-card__title">{config.whatsapp.label}</h3>
-                  <span className="contact-badge contact-badge--pending">
-                    {config.whatsapp.statusBadge}
-                  </span>
+                <h3 className="contact-card__title">{config.whatsapp.label}</h3>
+                <div className="contact-card__wa-list" role="list">
+                  {config.whatsapp.numbers.map((item) => (
+                    <div key={item.raw} className="contact-card__wa-row" role="listitem">
+                      <span className="contact-card__wa-label">{item.formatted}</span>
+                      <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-whatsapp btn-sm"
+                        id={`contact-whatsapp-btn-${item.raw}`}
+                        aria-label={`Chat on WhatsApp with ${item.formatted}`}
+                      >
+                        Chat ↗
+                      </a>
+                    </div>
+                  ))}
                 </div>
-                <p className="contact-card__value">{config.whatsapp.displayValue}</p>
-                <p className="contact-card__sub">💬 Instant event assistance & updates</p>
-                <p className="contact-card__note">{config.whatsapp.note}</p>
+                <p className="contact-card__desc">{config.whatsapp.description}</p>
               </div>
               <div className="contact-card__footer">
-                {config.whatsapp.isConfirmed && config.whatsapp.waNumber ? (
-                  <a
-                    href={`https://wa.me/${config.whatsapp.waNumber}?text=${encodeURIComponent(
-                      config.whatsapp.defaultMessage
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-whatsapp btn-sm"
-                    id="contact-whatsapp-chat-btn"
-                  >
-                    Chat on WhatsApp ↗
-                  </a>
-                ) : (
-                  <div className="contact-card__whatsapp-pending">
-                    <button
-                      type="button"
-                      className="btn btn-whatsapp btn-sm"
-                      disabled
-                      aria-disabled="true"
-                      id="contact-whatsapp-disabled-btn"
-                      title="WhatsApp number pending team confirmation"
-                    >
-                      WhatsApp Unavailable
-                    </button>
-                    <span className="contact-card__action-hint">
-                      Will be activated once official number is submitted
-                    </span>
-                  </div>
-                )}
+                <span className="contact-card__meta-tag contact-card__meta-tag--green">
+                  ✓ Instant Messaging Available
+                </span>
               </div>
             </article>
           </div>
@@ -325,18 +250,17 @@ export default function ContactPage() {
             <div className="enquiry-banner__content">
               <span className="section-label">Online Assistance</span>
               <h2 id="enquiry-banner-heading" className="enquiry-banner__title">
-                Have a Question or Need a
-                <span className="text-gradient"> Custom Stall Booking?</span>
+                Planning an Exhibition Stall or <span className="text-gradient">Sponsorship?</span>
               </h2>
               <p className="enquiry-banner__desc">
-                Skip the wait! Submit your requirement directly through our dedicated Enquiry portal.
-                Whether you need details on exhibition stall pricing, sponsorship packages, or event
-                participation, our team will review and respond directly to you.
+                Submit your specific requirements through our dedicated online portal.
+                Whether you need stall dimensions, pricing schedules, or partnership options,
+                our organizing desk will review and connect with you directly.
               </p>
               <div className="enquiry-banner__highlights">
-                <span>✓ Stall & Space Reservations</span>
-                <span>✓ Sponsorship Opportunities</span>
-                <span>✓ Group Registrations & Feedback</span>
+                <span>✓ Exhibition Stall Booking</span>
+                <span>✓ Brand Sponsorship Opportunities</span>
+                <span>✓ Artist & Cultural Showcases</span>
               </div>
             </div>
             <div className="enquiry-banner__action">
@@ -345,91 +269,50 @@ export default function ContactPage() {
                 className="btn btn-primary btn-lg enquiry-banner__btn"
                 id="contact-hero-enquiry-btn"
               >
-                Go to Enquiry Page →
+                Go to Enquiry Portal →
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── OPERATING HOURS & SOCIAL CHANNELS ── */}
-      <section className="contact-details-section" aria-labelledby="office-hours-heading">
-        <div className="container contact-details-grid">
-          {/* Working Hours */}
-          <div className="card contact-hours-card">
-            <h3 id="office-hours-heading" className="contact-section-subtitle">
-              Office Coordination Hours
-            </h3>
-            <p className="contact-hours-desc">
-              Our coordination desk operates during the following schedule for attendee inquiries,
-              vendor coordination, and event bookings:
-            </p>
-            <ul className="contact-hours-list" role="list">
-              {config.workingHours.map((item, idx) => (
-                <li key={idx} className="contact-hours-item" role="listitem">
-                  <span className="contact-hours-days">{item.days}</span>
-                  <span className="contact-hours-time">{item.hours}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="contact-hours-footer">
-              <span className="contact-hours-badge">📍 Nashik Office</span>
-              <p className="contact-hours-note">
-                Response times during official state holidays and exhibition setup days may vary.
+      {/* ── KEY EVENT COORDINATORS SECTION ── */}
+      <section className="contact-details-section" aria-labelledby="coordinators-heading">
+        <div className="container">
+          <div className="card contact-coordinators-card">
+            <div className="contact-coordinators-header">
+              <h3 id="coordinators-heading" className="contact-section-subtitle">
+                Official Event Coordinators
+              </h3>
+              <p className="contact-coordinators-desc">
+                For prompt coordination, vendor inquiries, and stall allocations, contact our team members directly:
               </p>
             </div>
-          </div>
 
-          {/* Social Media Links */}
-          <div className="card contact-social-card" aria-labelledby="social-channels-heading">
-            <h3 id="social-channels-heading" className="contact-section-subtitle">
-              Official Social Channels
-            </h3>
-            <p className="contact-social-desc">
-              Follow Shree Sakhi Events on social platforms to catch live event stories, highlights,
-              and announcements:
-            </p>
-
-            <div className="contact-social-list" role="list">
-              {config.socialMedia.map((social) => {
-                const hasOfficialUrl = social.isAvailable && social.officialUrl;
-
-                return (
-                  <div key={social.id} className="contact-social-item" role="listitem">
-                    <div className="contact-social-info">
-                      <span className="contact-social-name">{social.name}</span>
-                      <span className="contact-social-handle">{social.handle}</span>
-                    </div>
-
-                    {hasOfficialUrl ? (
-                      <a
-                        href={social.officialUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-outline btn-sm contact-social-btn"
-                        id={`social-link-${social.id}`}
-                        aria-label={`Visit Shree Sakhi Events on ${social.name}`}
-                      >
-                        Visit Channel ↗
-                      </a>
-                    ) : (
-                      <span
-                        className="contact-badge contact-badge--pending contact-social-pending"
-                        id={`social-pending-${social.id}`}
-                        title="Official channel pending team confirmation"
-                      >
-                        {social.badgeText}
-                      </span>
-                    )}
+            <div className="contact-coordinators-grid" role="list">
+              {config.coordinators.map((coordinator, idx) => (
+                <div key={idx} className="coordinator-item" role="listitem">
+                  <div className="coordinator-avatar" aria-hidden="true">
+                    {coordinator.name.charAt(0)}
                   </div>
-                );
-              })}
+                  <div className="coordinator-info">
+                    <span className="coordinator-name">{coordinator.name}</span>
+                    <span className="coordinator-role">Event Coordination</span>
+                    <a
+                      href={coordinator.telLink}
+                      className="coordinator-phone"
+                      aria-label={`Call coordinator ${coordinator.name} at ${coordinator.formatted}`}
+                    >
+                      📞 {coordinator.formatted}
+                    </a>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <p className="contact-social-disclaimer">
-              🔒 In accordance with project security standards, only verified official URLs will be
-              linked to prevent unauthenticated redirection.
-            </p>
+            <div className="contact-coordinators-footer">
+              <span>📍 Shree Sakhi Events • Nashik Road, Nashik, Maharashtra</span>
+            </div>
           </div>
         </div>
       </section>
@@ -437,7 +320,7 @@ export default function ContactPage() {
   );
 }
 
-/* ── SVG Icons ── */
+/* ── Accessible SVG Icons ── */
 
 function LocationPinIcon() {
   return (

@@ -61,9 +61,12 @@ public class SakhiEventsApplication {
 
     // Seed demo data on startup if DB is empty
     @Bean
-    public CommandLineRunner seedData(EventService eventService) {
+    public CommandLineRunner seedData(org.springframework.beans.factory.ObjectProvider<EventService> eventServiceProvider) {
         return args -> {
-            eventService.seedEventsIfEmpty();
+            EventService eventService = eventServiceProvider.getIfAvailable();
+            if (eventService != null) {
+                eventService.seedEventsIfEmpty();
+            }
         };
     }
 }

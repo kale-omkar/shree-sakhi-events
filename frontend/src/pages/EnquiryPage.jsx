@@ -1,6 +1,14 @@
 import { useState, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { COMPANY_INFO, formatIndianPhone } from '../constants/companyInfo';
+import { enquiriesApi } from '../api/eventsApi';
 import './EnquiryPage.css';
+
+/**
+ * Official Enquiry Notification Recipient
+ * Sourced strictly from confirmed company configuration.
+ */
+export const ENQUIRY_NOTIFICATION_RECIPIENT = COMPANY_INFO.enquiryNotificationEmail || 'shreesakhi26@gmail.com';
 
 /**
  * Suggested Enquiry Categories for Shree Sakhi Events
@@ -93,10 +101,10 @@ function validateEnquiryForm(formValues) {
     errors.fullName = 'Please enter a valid name (letters, spaces, and hyphens only).';
   }
 
-  // 2. Company Name (Optional, but length bounded)
+  // 2. Company Name (Optional, length bounded)
   const trimmedCompany = (formValues.companyName || '').trim();
   if (trimmedCompany.length > 100) {
-    errors.companyName = 'Company / organization name cannot exceed 100 characters.';
+    errors.companyName = 'Company or brand name cannot exceed 100 characters.';
   }
 
   // 3. Email
@@ -108,7 +116,7 @@ function validateEnquiryForm(formValues) {
     errors.email = 'Please enter a valid email address (e.g. name@domain.com).';
   }
 
-  // 4. Phone Number (10 digits expected for Indian mobile/landline numbers)
+  // 4. Phone Number (10 to 13 digits expected)
   const phoneDigits = (formValues.phone || '').replace(/\D/g, '');
   if (!phoneDigits) {
     errors.phone = 'Phone number is required.';
@@ -137,6 +145,27 @@ function validateEnquiryForm(formValues) {
   return errors;
 }
 
+/**
+ * Format ISO datetime string to Indian readable date/time
+ */
+function formatEnquiryDateTime(isoString) {
+  if (!isoString) return 'Just now';
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return 'Just now';
+    return d.toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch (e) {
+    return 'Just now';
+  }
+}
+
 export default function EnquiryPage() {
   const [searchParams] = useSearchParams();
 
@@ -149,7 +178,9 @@ export default function EnquiryPage() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState(null);
   const [submittedData, setSubmittedData] = useState(null);
+  const [copiedRef, setCopiedRef] = useState(false);
 
   // References for keyboard accessibility & auto-focus
   const fullNameRef = useRef(null);
@@ -176,7 +207,6 @@ export default function EnquiryPage() {
     const nextForm = { ...form, [name]: value };
     setForm(nextForm);
 
-    // Live validation update for touched fields
     if (touched[name]) {
       const fieldErrors = validateEnquiryForm(nextForm);
       setErrors(prev => {
@@ -208,9 +238,10 @@ export default function EnquiryPage() {
     });
   };
 
-  // Form submission handler
-  const handleSubmit = (e) => {
+  // Form submission handler connected to backend API
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setServerError(null);
 
     // Mark all fields touched
     const allTouched = {
@@ -229,7 +260,6 @@ export default function EnquiryPage() {
     if (hasErrors) {
       setErrors(validationErrors);
 
-      // Accessibility: focus the first invalid field or error summary
       const errorFieldKeys = ['fullName', 'companyName', 'email', 'phone', 'enquiryType', 'message'];
       const firstInvalidField = errorFieldKeys.find(key => validationErrors[key]);
 
@@ -241,31 +271,100 @@ export default function EnquiryPage() {
       return;
     }
 
-    // No client validation errors
+    // No client validation errors — proceed with backend submission
     setErrors({});
     setIsSubmitting(true);
 
-    // Frontend validation stage simulation:
-    // Strictly adheres to Requirement 9: No fake success claim, no claim that email
-    // has been sent or data saved to DB. Clearly handles this as a frontend-validated stage.
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmittedData({ ...form });
+    const payload = {
+      fullName: form.fullName.trim(),
+      companyName: form.companyName ? form.companyName.trim() : null,
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      enquiryType: form.enquiryType.trim(),
+      message: form.message.trim(),
+    };
 
-      // Smooth scroll to feedback area
-      if (feedbackRef.current) {
-        feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    try {
+      const response = await enquiriesApi.submit(payload);
+
+      if (response.ok && response.success) {
+        // Genuine success confirmed by backend database persistence!
+        const savedEntity = response.data || {};
+        const referenceId = savedEntity.id || Date.now();
+        const referenceCode = `SSE-ENQ-${String(referenceId).padStart(5, '0')}`;
+
+        setIsSubmitting(false);
+        setSubmittedData({
+          ...form,
+          id: referenceId,
+          referenceCode,
+          createdAt: savedEntity.createdAt || new Date().toISOString(),
+        });
+
+        setTimeout(() => {
+          if (feedbackRef.current) {
+            feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            feedbackRef.current.focus();
+          } else {
+            window.scrollTo({ top: 100, behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        // Backend returned an error response
+        setIsSubmitting(false);
+
+        if (response.data && typeof response.data === 'object' && !Array.isArray(response.data)) {
+          setErrors(response.data);
+          setServerError({
+            message: response.message || 'Validation failed on the server. Please check the highlighted fields.',
+            details: Object.values(response.data),
+          });
+        } else {
+          setServerError({
+            message: response.message || `Submission failed with status ${response.status || 400}. Please try again.`,
+          });
+        }
+
+        setTimeout(() => {
+          if (errorSummaryRef.current) {
+            errorSummaryRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            errorSummaryRef.current.focus();
+          }
+        }, 100);
       }
-    }, 350);
+    } catch (networkErr) {
+      // Network or fetch failure
+      setIsSubmitting(false);
+      setServerError({
+        message: 'Unable to reach the server. Please ensure your internet connection is active, or try again in a few moments.',
+      });
+
+      setTimeout(() => {
+        if (errorSummaryRef.current) {
+          errorSummaryRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          errorSummaryRef.current.focus();
+        }
+      }, 100);
+    }
   };
 
-  // Reset handler to allow multiple test rounds or edits
+  // Reset handler to allow submitting another enquiry
   const handleResetForm = () => {
     setSubmittedData(null);
+    setServerError(null);
     setForm(INITIAL_FORM);
     setErrors({});
     setTouched({});
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Copy reference code to clipboard with visual feedback
+  const handleCopyReference = () => {
+    if (!submittedData?.referenceCode) return;
+    navigator.clipboard.writeText(submittedData.referenceCode).then(() => {
+      setCopiedRef(true);
+      setTimeout(() => setCopiedRef(false), 2400);
+    }).catch(() => {});
   };
 
   const errorList = Object.entries(errors);
@@ -295,20 +394,24 @@ export default function EnquiryPage() {
             Share your requirements below and our organizing team will get in touch.
           </p>
 
-          {/* Frontend Stage Notice Banner */}
-          <div className="enquiry-stage-notice animate-fade-up delay-300" role="status">
-            <span className="enquiry-stage-notice__icon" aria-hidden="true">💡</span>
-            <div className="enquiry-stage-notice__text">
-              <strong>Frontend Verification Stage:</strong> This form performs full client-side validation
-              and structural accessibility checks. The backend integration (<code>POST /api/enquiries</code>)
-              is scheduled in the next sprint.
-              <span className="enquiry-stage-notice__tag">Frontend Only</span>
+          <div className="enquiry-trust-strip animate-fade-up delay-300" role="status">
+            <div className="enquiry-trust-pill">
+              <span className="enquiry-trust-icon" aria-hidden="true">✦</span>
+              <span>Official Event Registry</span>
+            </div>
+            <div className="enquiry-trust-pill">
+              <span className="enquiry-trust-icon" aria-hidden="true">📍</span>
+              <span>Nashik Road Coordination Desk</span>
+            </div>
+            <div className="enquiry-trust-pill">
+              <span className="enquiry-trust-icon" aria-hidden="true">🤝</span>
+              <span>Dedicated Exhibitor Support</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── MAIN CONTENT: SIDEBAR + FORM / FEEDBACK ── */}
+      {/* ── MAIN CONTENT: SIDEBAR + FORM / CONFIRMATION ── */}
       <section className="enquiry-section" aria-label="Enquiry Form and Guidance">
         <div className="container enquiry-layout">
 
@@ -343,119 +446,223 @@ export default function EnquiryPage() {
                 </div>
                 <div className="enquiry-highlight-item">
                   <span className="enquiry-highlight-bullet">✓</span>
-                  <span><strong>Response Window:</strong> 24 to 48 working hours upon backend integration activation.</span>
+                  <span><strong>Direct Coordination:</strong> Personal assistance from our Nashik organizing team.</span>
                 </div>
               </div>
             </div>
 
-            {/* Verification & Contact Reference (Adheres to Rule 13: No hardcoded unverified numbers) */}
+            {/* Confirmed Coordination Desk & WhatsApp Numbers */}
             <div className="enquiry-contact-ref">
               <h3 className="enquiry-contact-ref__title">
-                <span>📍</span> Coordination Desk — Nashik
+                <span>📍</span> Coordination Desk — Nashik Road
               </h3>
               <p className="enquiry-contact-ref__desc">
-                Direct phone helpline and WhatsApp coordination numbers are undergoing administrative
-                verification against company records. Visit our Contact page to view current verification status.
+                For quick stall inquiries or urgent coordination, chat with our coordinators on WhatsApp at{' '}
+                <a
+                  href={`https://wa.me/91${COMPANY_INFO.whatsappNumbers[0]}?text=${encodeURIComponent('Hello Shree Sakhi Events, I would like to enquire about exhibition stalls.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="enquiry-contact-ref__wa-link"
+                >
+                  {formatIndianPhone(COMPANY_INFO.whatsappNumbers[0])}
+                </a>
+                {' or '}
+                <a
+                  href={`https://wa.me/91${COMPANY_INFO.whatsappNumbers[1]}?text=${encodeURIComponent('Hello Shree Sakhi Events, I would like to enquire about exhibition stalls.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="enquiry-contact-ref__wa-link"
+                >
+                  {formatIndianPhone(COMPANY_INFO.whatsappNumbers[1])}
+                </a>.
               </p>
               <Link to="/contact" className="enquiry-contact-ref__link" id="enquiry-contact-link">
-                View Contact Verification Status →
+                View All Contact Channels →
               </Link>
             </div>
           </aside>
 
-          {/* ── RIGHT COLUMN: FORM OR FEEDBACK ── */}
+          {/* ── RIGHT COLUMN: FORM OR PREMIUM CONFIRMATION SCREEN ── */}
           <div className="enquiry-main-col">
             {submittedData ? (
-              /* ── FRONTEND VALIDATED FEEDBACK VIEW ── */
+              /* ── PREMIUM SUBMISSION SUCCESS CONFIRMATION SCREEN ── */
               <div
-                className="enquiry-feedback-area"
+                className="enquiry-success-experience animate-fade-in"
                 ref={feedbackRef}
                 tabIndex={-1}
                 role="status"
                 aria-live="polite"
               >
-                <div className="enquiry-feedback-card card">
-                  <div className="enquiry-feedback-badge-row">
-                    <span className="enquiry-feedback-badge">
-                      <CheckIcon /> Client Validation Passed
-                    </span>
-                    <span className="enquiry-feedback-badge enquiry-feedback-badge--stage">
-                      Frontend Stage
-                    </span>
+                <div className="enquiry-success-card card">
+                  <div className="enquiry-success-glow" aria-hidden="true" />
+
+                  {/* Header with Brand Seal & Reference Code */}
+                  <div className="enquiry-success-header">
+                    <div className="enquiry-success-seal">
+                      <div className="enquiry-success-seal__ring" aria-hidden="true" />
+                      <div className="enquiry-success-seal__icon" aria-hidden="true">
+                        <CheckIcon />
+                      </div>
+                    </div>
+
+                    <div className="enquiry-ref-badge-row">
+                      <span className="enquiry-ref-tag">Official Enquiry Reference</span>
+                      <div className="enquiry-ref-pill">
+                        <span className="enquiry-ref-code">{submittedData.referenceCode}</span>
+                        <button
+                          type="button"
+                          className={`enquiry-copy-btn ${copiedRef ? 'enquiry-copy-btn--copied' : ''}`}
+                          onClick={handleCopyReference}
+                          title="Copy reference code to clipboard"
+                          aria-label="Copy reference code"
+                        >
+                          {copiedRef ? (
+                            <>
+                              <CheckIcon />
+                              <span>Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <CopyIcon />
+                              <span>Copy Ref</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <h2 className="enquiry-success-title">
+                      Enquiry Submitted <span className="text-gradient">Successfully</span>
+                    </h2>
+
+                    <p className="enquiry-success-lead">
+                      Thank you, <strong>{submittedData.fullName}</strong>. Your enquiry details have been
+                      successfully recorded in the Shree Sakhi Events database. Our coordination team
+                      in Nashik has received your submission.
+                    </p>
                   </div>
 
-                  <h2 className="enquiry-feedback-title">
-                    Enquiry Details <span className="text-gradient">Ready for Dispatch</span>
-                  </h2>
+                  {/* 3-Step Milestone Pipeline */}
+                  <div className="enquiry-timeline">
+                    <div className="enquiry-timeline-title">Next Steps in the Process</div>
+                    <div className="enquiry-timeline-grid">
+                      <div className="enquiry-timeline-step enquiry-timeline-step--completed">
+                        <div className="enquiry-timeline-step__marker">1</div>
+                        <div className="enquiry-timeline-step__content">
+                          <div className="enquiry-timeline-step__heading">Enquiry Recorded</div>
+                          <div className="enquiry-timeline-step__desc">
+                            Stored in event registry on {formatEnquiryDateTime(submittedData.createdAt)}.
+                          </div>
+                        </div>
+                      </div>
 
-                  <p className="enquiry-feedback-lead">
-                    Thank you, <strong>{submittedData.fullName}</strong>. All required fields have met the
-                    formatting and validation constraints for Shree Sakhi Events.
-                  </p>
+                      <div className="enquiry-timeline-step enquiry-timeline-step--active">
+                        <div className="enquiry-timeline-step__marker">2</div>
+                        <div className="enquiry-timeline-step__content">
+                          <div className="enquiry-timeline-step__heading">Desk Review & Allocation</div>
+                          <div className="enquiry-timeline-step__desc">
+                            Our team reviews your category requirements and checks space availability.
+                          </div>
+                        </div>
+                      </div>
 
-                  {/* Explicit Backend Status Notice (Requirement 9) */}
-                  <div className="enquiry-backend-alert">
-                    <span className="enquiry-backend-alert__icon" aria-hidden="true">⚠️</span>
-                    <div className="enquiry-backend-alert__content">
-                      <strong>Frontend-Only Milestone:</strong> The backend endpoint{' '}
-                      <code className="enquiry-backend-alert__code">POST /api/enquiries</code> is not yet connected.
-                      No database record has been created, and no automated confirmation email has been dispatched.
-                      Your entered data is displayed below as verified on the client:
+                      <div className="enquiry-timeline-step">
+                        <div className="enquiry-timeline-step__marker">3</div>
+                        <div className="enquiry-timeline-step__content">
+                          <div className="enquiry-timeline-step__heading">Coordinator Connect</div>
+                          <div className="enquiry-timeline-step__desc">
+                            An official coordinator will reach out to <strong>{submittedData.phone}</strong> or by email.
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Summary of Validated Submission */}
-                  <div className="enquiry-summary-box">
-                    <div className="enquiry-summary-heading">Validated Payload Summary</div>
-                    <div className="enquiry-summary-grid">
-                      <div className="enquiry-summary-field">
-                        <span className="enquiry-summary-label">Full Name</span>
-                        <span className="enquiry-summary-val">{submittedData.fullName}</span>
+                  {/* Booking Clarification Notice */}
+                  <div className="enquiry-booking-notice">
+                    <span className="enquiry-booking-notice__icon" aria-hidden="true">ℹ️</span>
+                    <p className="enquiry-booking-notice__text">
+                      <strong>Important Note:</strong> Submitting this enquiry logs your space and participation
+                      request. It does not automatically confirm an exhibition stall booking. A confirmed reservation
+                      is finalized after space allocation, document review, and formal booking completion.
+                    </p>
+                  </div>
+
+                  {/* High-Contrast Structured Summary */}
+                  <div className="enquiry-luxury-summary">
+                    <div className="enquiry-luxury-summary__head">
+                      <span>Verified Submission Summary</span>
+                      <span className="enquiry-luxury-timestamp">
+                        {formatEnquiryDateTime(submittedData.createdAt)}
+                      </span>
+                    </div>
+
+                    <div className="enquiry-luxury-grid">
+                      <div className="enquiry-luxury-item">
+                        <span className="enquiry-luxury-label">Contact Person</span>
+                        <span className="enquiry-luxury-val">{submittedData.fullName}</span>
                       </div>
 
-                      <div className="enquiry-summary-field">
-                        <span className="enquiry-summary-label">Company / Brand</span>
-                        <span className="enquiry-summary-val">
+                      <div className="enquiry-luxury-item">
+                        <span className="enquiry-luxury-label">Company / Brand</span>
+                        <span className="enquiry-luxury-val">
                           {submittedData.companyName || '— (Individual Participant)'}
                         </span>
                       </div>
 
-                      <div className="enquiry-summary-field">
-                        <span className="enquiry-summary-label">Email Address</span>
-                        <span className="enquiry-summary-val">{submittedData.email}</span>
+                      <div className="enquiry-luxury-item">
+                        <span className="enquiry-luxury-label">Email Address</span>
+                        <span className="enquiry-luxury-val">{submittedData.email}</span>
                       </div>
 
-                      <div className="enquiry-summary-field">
-                        <span className="enquiry-summary-label">Phone Number</span>
-                        <span className="enquiry-summary-val">{submittedData.phone}</span>
+                      <div className="enquiry-luxury-item">
+                        <span className="enquiry-luxury-label">Phone Number</span>
+                        <span className="enquiry-luxury-val">{submittedData.phone}</span>
                       </div>
 
-                      <div className="enquiry-summary-field enquiry-summary-field--full">
-                        <span className="enquiry-summary-label">Enquiry Stream</span>
-                        <span className="enquiry-summary-val" style={{ color: 'var(--color-gold-light)' }}>
+                      <div className="enquiry-luxury-item enquiry-luxury-item--full">
+                        <span className="enquiry-luxury-label">Enquiry Stream</span>
+                        <span className="enquiry-luxury-val enquiry-luxury-val--highlight">
                           {submittedData.enquiryType}
                         </span>
                       </div>
 
-                      <div className="enquiry-summary-field enquiry-summary-field--full">
-                        <span className="enquiry-summary-label">Enquiry Message</span>
-                        <div className="enquiry-summary-val enquiry-summary-val--message">
+                      <div className="enquiry-luxury-item enquiry-luxury-item--full">
+                        <span className="enquiry-luxury-label">Requirements & Message</span>
+                        <div className="enquiry-luxury-val enquiry-luxury-val--message">
                           {submittedData.message}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="enquiry-feedback-actions">
+                  {/* Action Toolbar */}
+                  <div className="enquiry-success-actions">
+                    <a
+                      href={`https://wa.me/91${COMPANY_INFO.whatsappNumbers[0]}?text=${encodeURIComponent(`Hello Shree Sakhi Events, I have submitted Enquiry ${submittedData.referenceCode} regarding ${submittedData.enquiryType}. Looking forward to connecting.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-whatsapp enquiry-wa-btn"
+                      id="enquiry-success-wa-btn"
+                    >
+                      <WhatsAppIcon />
+                      <span>Chat on WhatsApp ({submittedData.referenceCode})</span>
+                    </a>
+
                     <button
                       type="button"
                       className="btn btn-primary"
                       onClick={handleResetForm}
                       id="enquiry-reset-btn"
                     >
-                      Fill Another Enquiry Form
+                      Submit Another Enquiry
                     </button>
-                    <Link to="/events" className="btn btn-outline" id="enquiry-browse-events-btn">
+
+                    <Link to="/" className="btn btn-outline" id="enquiry-return-home-btn">
+                      Return to Home
+                    </Link>
+
+                    <Link to="/events" className="btn btn-ghost" id="enquiry-browse-events-btn">
                       Explore Upcoming Events →
                     </Link>
                   </div>
@@ -463,7 +670,7 @@ export default function EnquiryPage() {
               </div>
             ) : (
               /* ── INTERACTIVE ENQUIRY FORM ── */
-              <div className="enquiry-form-card card glass">
+              <div className="enquiry-form-card card">
                 <div className="enquiry-form-header">
                   <h2 className="enquiry-form-title">
                     Enquiry & <span className="text-gradient">Space Reservation</span>
@@ -476,8 +683,47 @@ export default function EnquiryPage() {
                   </p>
                 </div>
 
-                {/* Accessibility Error Summary Banner */}
-                {errorList.length > 0 && (
+                {/* Server / Network Error Alert Banner */}
+                {serverError && (
+                  <div
+                    className="enquiry-server-error-banner"
+                    role="alert"
+                    aria-live="assertive"
+                    ref={errorSummaryRef}
+                    tabIndex={-1}
+                  >
+                    <div className="enquiry-server-error-main">
+                      <span className="enquiry-server-error-icon" aria-hidden="true">⚠️</span>
+                      <div className="enquiry-server-error-body">
+                        <strong className="enquiry-server-error-title">Submission Error</strong>
+                        <p className="enquiry-server-error-text">
+                          {typeof serverError === 'string' ? serverError : serverError.message}
+                        </p>
+                        {serverError.details && Array.isArray(serverError.details) && (
+                          <ul className="enquiry-server-error-list">
+                            {serverError.details.map((msg, i) => (
+                              <li key={i}>{msg}</li>
+                            ))}
+                          </ul>
+                        )}
+                        <span className="enquiry-server-error-hint">
+                          Your entered details have been preserved below. Please correct any highlighted fields and try submitting again.
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="enquiry-server-error-close"
+                        onClick={() => setServerError(null)}
+                        aria-label="Close error notice"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Client Validation Error Summary Banner */}
+                {errorList.length > 0 && !serverError && (
                   <div
                     className="enquiry-error-banner"
                     role="alert"
@@ -520,6 +766,7 @@ export default function EnquiryPage() {
                           value={form.fullName}
                           onChange={handleChange}
                           onBlur={handleBlur}
+                          disabled={isSubmitting}
                           aria-required="true"
                           aria-invalid={!!errors.fullName}
                           aria-describedby={errors.fullName ? 'enquiry-fullname-error' : undefined}
@@ -536,7 +783,7 @@ export default function EnquiryPage() {
 
                     <div className="enquiry-form-group">
                       <label htmlFor="enquiry-company" className="form-label">
-                        Company / Brand Name <span className="form-label-opt" style={{ fontSize: '0.78rem', color: 'var(--color-text-subtle)' }}>(Optional)</span>
+                        Company / Brand Name <span className="form-label-opt">(Optional)</span>
                       </label>
                       <div className="enquiry-input-wrapper">
                         <span className="enquiry-input-icon" aria-hidden="true">
@@ -552,6 +799,7 @@ export default function EnquiryPage() {
                           value={form.companyName}
                           onChange={handleChange}
                           onBlur={handleBlur}
+                          disabled={isSubmitting}
                           aria-invalid={!!errors.companyName}
                           aria-describedby={errors.companyName ? 'enquiry-company-error' : undefined}
                           autoComplete="organization"
@@ -586,6 +834,7 @@ export default function EnquiryPage() {
                           value={form.email}
                           onChange={handleChange}
                           onBlur={handleBlur}
+                          disabled={isSubmitting}
                           aria-required="true"
                           aria-invalid={!!errors.email}
                           aria-describedby={errors.email ? 'enquiry-email-error' : undefined}
@@ -618,6 +867,7 @@ export default function EnquiryPage() {
                           value={form.phone}
                           onChange={handleChange}
                           onBlur={handleBlur}
+                          disabled={isSubmitting}
                           aria-required="true"
                           aria-invalid={!!errors.phone}
                           aria-describedby={errors.phone ? 'enquiry-phone-error' : 'enquiry-phone-hint'}
@@ -625,7 +875,7 @@ export default function EnquiryPage() {
                         />
                       </div>
                       <span id="enquiry-phone-hint" className="enquiry-field-hint">
-                        10-digit mobile number for WhatsApp & call updates
+                        10-digit mobile number for calls & WhatsApp coordination
                       </span>
                       {errors.phone && (
                         <div id="enquiry-phone-error" className="enquiry-field-error" role="alert">
@@ -653,6 +903,7 @@ export default function EnquiryPage() {
                         value={form.enquiryType}
                         onChange={handleChange}
                         onBlur={handleBlur}
+                        disabled={isSubmitting}
                         aria-required="true"
                         aria-invalid={!!errors.enquiryType}
                         aria-describedby={errors.enquiryType ? 'enquiry-type-error' : undefined}
@@ -696,10 +947,11 @@ export default function EnquiryPage() {
                       rows={5}
                       maxLength={1000}
                       className={`form-input enquiry-textarea ${errors.message ? 'error' : ''}`}
-                      placeholder="Please specify stall size needs, product types, target event dates, sponsorship interests, or general questions..."
+                      placeholder="Please specify stall dimensions, products to showcase, target dates, or specific questions..."
                       value={form.message}
                       onChange={handleChange}
                       onBlur={handleBlur}
+                      disabled={isSubmitting}
                       aria-required="true"
                       aria-invalid={!!errors.message}
                       aria-describedby={errors.message ? 'enquiry-message-error' : undefined}
@@ -712,13 +964,12 @@ export default function EnquiryPage() {
                     )}
                   </div>
 
-                  {/* Privacy / Consent Status Note (Adheres to Rule 10: Do not invent legal terms) */}
+                  {/* Privacy / Consent Status Note */}
                   <div className="enquiry-consent-note">
                     <span className="enquiry-consent-note__icon" aria-hidden="true">🔒</span>
                     <div>
-                      <strong>Privacy Notice:</strong> Official company data privacy policy wording is
-                      currently pending legal confirmation from administration. Submitted contact details will
-                      be used exclusively for organizing team communication regarding this event inquiry.
+                      <strong>Privacy Assurance:</strong> Your contact information will be used exclusively
+                      by the Shree Sakhi Events organizing desk to communicate regarding this exhibition enquiry.
                     </div>
                   </div>
 
@@ -733,11 +984,11 @@ export default function EnquiryPage() {
                       {isSubmitting ? (
                         <>
                           <span className="enquiry-spinner" aria-hidden="true" />
-                          <span>Validating Enquiry...</span>
+                          <span>Saving to Registry...</span>
                         </>
                       ) : (
                         <>
-                          <span>Submit Enquiry</span>
+                          <span>Submit Official Enquiry</span>
                           <span aria-hidden="true">→</span>
                         </>
                       )}
@@ -746,10 +997,12 @@ export default function EnquiryPage() {
                     <button
                       type="button"
                       className="btn btn-ghost enquiry-reset-btn"
+                      disabled={isSubmitting}
                       onClick={() => {
                         setForm(INITIAL_FORM);
                         setErrors({});
                         setTouched({});
+                        setServerError(null);
                       }}
                       id="enquiry-clear-btn"
                     >
@@ -839,8 +1092,26 @@ function AlertCircleIcon() {
 
 function CheckIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+
+function WhatsAppIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.456 5.711 1.457h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
     </svg>
   );
 }
