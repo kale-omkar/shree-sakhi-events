@@ -4,11 +4,23 @@
  */
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
-const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY || 'sakhi-admin-2026';
 
-const adminHeaders = {
-  'Content-Type': 'application/json',
-  'X-Admin-Key': ADMIN_KEY,
+export const getAdminHeaders = (keyOverride) => {
+  const key = keyOverride || sessionStorage.getItem('admin_api_key') || import.meta.env.VITE_ADMIN_KEY || '';
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  if (key) {
+    headers['X-Admin-Key'] = key;
+  }
+  return headers;
+};
+
+export const adminHeaders = {
+  get 'Content-Type'() { return 'application/json'; },
+  get 'X-Admin-Key'() {
+    return sessionStorage.getItem('admin_api_key') || import.meta.env.VITE_ADMIN_KEY || '';
+  },
 };
 
 /** Unwraps { success, message, data } — throws on failure */

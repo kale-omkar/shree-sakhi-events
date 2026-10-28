@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { COMPANY_INFO } from '../constants/companyInfo';
+import InstagramIcon from './InstagramIcon';
 import './Footer.css';
 
 export default function Footer() {
@@ -23,6 +24,18 @@ export default function Footer() {
           <div className="site-footer__location">
             <span className="site-footer__pin-icon" aria-hidden="true">📍</span>
             <span>{COMPANY_INFO.address}</span>
+          </div>
+          <div className="site-footer__social">
+            <a
+              href={COMPANY_INFO.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="site-footer__instagram-btn"
+              aria-label="Follow Shree Sakhi Events on Instagram (opens in a new tab)"
+            >
+              <InstagramIcon size={18} />
+              <span>Follow us on Instagram</span>
+            </a>
           </div>
         </div>
 
@@ -94,6 +107,17 @@ export default function Footer() {
             © {new Date().getFullYear()} {COMPANY_INFO.name}, {COMPANY_INFO.city}. All rights reserved.
           </p>
           <div className="site-footer__bottom-links">
+            <a
+              href={COMPANY_INFO.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="site-footer__bottom-instagram"
+              aria-label="Follow us on Instagram (opens in a new tab)"
+            >
+              <InstagramIcon size={14} />
+              <span>Instagram</span>
+            </a>
+            <span className="site-footer__dot-divider" aria-hidden="true">•</span>
             <Link to="/admin" className="site-footer__admin-link">
               Admin Portal
             </Link>

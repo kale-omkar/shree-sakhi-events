@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { COMPANY_INFO, formatIndianPhone } from '../constants/companyInfo';
+import InstagramIcon from '../components/InstagramIcon';
 import './ContactPage.css';
 
 /**
@@ -60,6 +61,14 @@ export const COMPANY_CONTACT_CONFIG = {
       },
     ],
     description: 'Instant chat support for stall reservations, exhibitor queries, and event updates.',
+  },
+
+  // Official Instagram
+  instagram: {
+    label: 'Official Instagram',
+    url: COMPANY_INFO.instagram || 'https://www.instagram.com/shree_sakhi_events?cplk=MXJ2YXUyZmx1eGx6Mg==',
+    handle: '@shree_sakhi_events',
+    description: 'Catch live exhibition highlights, stall setups, women entrepreneur features, and upcoming event dates on our official Instagram.',
   },
 
   // Key Event Coordinators
@@ -240,6 +249,40 @@ export default function ContactPage() {
               </div>
             </article>
           </div>
+
+          {/* Official Instagram Channel Card */}
+          <article className="contact-instagram-card card" id="contact-card-instagram">
+            <div className="contact-instagram-card__content">
+              <div className="contact-instagram-card__icon-wrap">
+                <InstagramIcon size={28} />
+              </div>
+              <div className="contact-instagram-card__details">
+                <div className="contact-social-card__badge">
+                  <span className="contact-social-card__dot" aria-hidden="true" />
+                  Official Social Channel
+                </div>
+                <h3 className="contact-instagram-card__title">
+                  Follow <span className="text-gradient">{config.instagram.handle}</span> on Instagram
+                </h3>
+                <p className="contact-instagram-card__desc">
+                  {config.instagram.description}
+                </p>
+              </div>
+            </div>
+            <div className="contact-instagram-card__action">
+              <a
+                href={config.instagram.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-instagram"
+                id="contact-instagram-link"
+                aria-label="Follow us on Instagram (opens in a new tab)"
+              >
+                <InstagramIcon size={18} />
+                <span>Follow us on Instagram</span>
+              </a>
+            </div>
+          </article>
         </div>
       </section>
 

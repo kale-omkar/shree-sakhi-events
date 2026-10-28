@@ -37,7 +37,10 @@ export default function AdminPanel() {
   const todayStr = getTodayStr();
 
   // ── Auth state ──
-  const [authed, setAuthed]   = useState(() => sessionStorage.getItem('admin_authed') === 'true');
+  const [authed, setAuthed]   = useState(() => {
+    return sessionStorage.getItem('admin_authed') === 'true' &&
+      Boolean(sessionStorage.getItem('admin_api_key') || import.meta.env.VITE_ADMIN_KEY);
+  });
   const [loginKey, setLoginKey] = useState('');
   const [loginErr, setLoginErr] = useState('');
 
@@ -64,27 +67,48 @@ export default function AdminPanel() {
     setError(null);
     adminEventsApi.getAll()
       .then(setEvents)
-      .catch(err => setError(err.message))
+      .catch(err => {
+        if (err.message && err.message.toLowerCase().includes('unauthorised')) {
+          sessionStorage.removeItem('admin_authed');
+          sessionStorage.removeItem('admin_api_key');
+          setAuthed(false);
+          setEvents([]);
+          setLoginErr('Session expired or invalid admin API key. Please sign in again.');
+        } else {
+          setError(err.message);
+        }
+      })
       .finally(() => setLoading(false));
   }, [authed]);
 
   useEffect(() => { loadEvents(); }, [loadEvents]);
 
   // ── Login ──
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const CORRECT = import.meta.env.VITE_ADMIN_KEY || 'sakhi-admin-2026';
-    if (loginKey === CORRECT) {
+    const key = loginKey.trim();
+    if (!key) {
+      setLoginErr('Admin key is required.');
+      return;
+    }
+    setLoginErr('');
+    setLoading(true);
+    try {
+      await adminEventsApi.getAll(key);
+      sessionStorage.setItem('admin_api_key', key);
       sessionStorage.setItem('admin_authed', 'true');
       setAuthed(true);
-      setLoginErr('');
-    } else {
-      setLoginErr('Invalid admin key. Please try again.');
+      setLoginKey('');
+    } catch (err) {
+      setLoginErr(err.message || 'Invalid admin key. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem('admin_authed');
+    sessionStorage.removeItem('admin_api_key');
     setAuthed(false);
     setEvents([]);
   };
@@ -289,8 +313,7 @@ export default function AdminPanel() {
             </button>
           </form>
           <p className="admin-login-hint">
-            Default key: <code>sakhi-admin-2026</code><br/>
-            (Set in backend .env as <code>admin.api.key</code>)
+            Enter the admin API key configured in your backend environment (<code>ADMIN_API_KEY</code>).
           </p>
         </div>
       </main>

@@ -48,7 +48,18 @@ export const enquiriesApi = {
       return { ...body, status: res.status, ok: res.ok };
     }),
 
-  getById: (id) => fetch(`${BASE_URL}/enquiries/${id}`).then(handleResponse),
-  getAll:  () => fetch(`${BASE_URL}/enquiries`).then(handleResponse),
+  getById: (id, keyOverride) => {
+    const key = keyOverride || sessionStorage.getItem('admin_api_key') || import.meta.env.VITE_ADMIN_KEY || '';
+    const headers = { 'Content-Type': 'application/json' };
+    if (key) headers['X-Admin-Key'] = key;
+    return fetch(`${BASE_URL}/enquiries/${id}`, { headers }).then(handleResponse);
+  },
+
+  getAll: (keyOverride) => {
+    const key = keyOverride || sessionStorage.getItem('admin_api_key') || import.meta.env.VITE_ADMIN_KEY || '';
+    const headers = { 'Content-Type': 'application/json' };
+    if (key) headers['X-Admin-Key'] = key;
+    return fetch(`${BASE_URL}/enquiries`, { headers }).then(handleResponse);
+  },
 };
 

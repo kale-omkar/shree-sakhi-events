@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
@@ -27,7 +29,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = {BookingController.class, AdminBookingController.class})
 @AutoConfigureMockMvc(addFilters = false)
+@Import(com.sakhievents.exception.GlobalExceptionHandler.class)
+@TestPropertySource(properties = "admin.api.key=" + BookingControllerTest.TEST_ADMIN_KEY)
 class BookingControllerTest {
+
+    public static final String TEST_ADMIN_KEY = "test-dummy-booking-admin-key";
+    public static final String INVALID_ADMIN_KEY = "invalid-dummy-booking-key";
 
     @Autowired
     private MockMvc mockMvc;
@@ -101,10 +108,30 @@ class BookingControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/admin/bookings - should reject request without X-Admin-Key")
+    @DisplayName("GET /api/admin/bookings - should reject request without X-Admin-Key with 401")
     void testAdminGetBookingsUnauthorized() throws Exception {
         mockMvc.perform(get("/api/admin/bookings"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Unauthorised: invalid or missing admin API key"));
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/bookings - should reject request with invalid X-Admin-Key with 401")
+    void testAdminGetBookingsInvalidKey() throws Exception {
+        mockMvc.perform(get("/api/admin/bookings")
+                .header("X-Admin-Key", INVALID_ADMIN_KEY))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Unauthorised: invalid or missing admin API key"));
+    }
+
+    @Test
+    @DisplayName("GET /api/admin/bookings - should reject request with blank X-Admin-Key with 401")
+    void testAdminGetBookingsBlankKey() throws Exception {
+        mockMvc.perform(get("/api/admin/bookings")
+                .header("X-Admin-Key", "   "))
+                .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Unauthorised: invalid or missing admin API key"));
     }
@@ -115,7 +142,7 @@ class BookingControllerTest {
         when(bookingService.getAllBookings(null, null)).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/api/admin/bookings")
-                .header("X-Admin-Key", "sakhi-admin-2026"))
+                .header("X-Admin-Key", TEST_ADMIN_KEY))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }
@@ -133,11 +160,46 @@ class BookingControllerTest {
         when(bookingService.updateBookingStatus(eq(1L), any(BookingStatusUpdateDTO.class))).thenReturn(response);
 
         mockMvc.perform(patch("/api/admin/bookings/1")
-                .header("X-Admin-Key", "sakhi-admin-2026")
+                .header("X-Admin-Key", TEST_ADMIN_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.bookingStatus").value("CONFIRMED"));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/admin/bookings/{id} - should reject when X-Admin-Key is missing with 401")
+    void testAdminUpdateBookingStatusUnauthorized() throws Exception {
+        BookingStatusUpdateDTO updateDTO = new BookingStatusUpdateDTO();
+        updateDTO.setBookingStatus(Booking.BookingStatus.CONFIRMED);
+
+        mockMvc.perform(patch("/api/admin/bookings/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("Fail-safe: AdminBookingController fails closed with 401 when admin key is unconfigured or blank")
+    void testAdminBookingControllerFailSafe() {
+        AdminBookingController unconfigured = new AdminBookingController(bookingService, "");
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.sakhievents.exception.UnauthorizedException.class,
+                () -> unconfigured.getAllBookings("any-key", null, null)
+        );
+
+        AdminBookingController nullKey = new AdminBookingController(bookingService, null);
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.sakhievents.exception.UnauthorizedException.class,
+                () -> nullKey.getAllBookings("any-key", null, null)
+        );
+
+        AdminBookingController blankKey = new AdminBookingController(bookingService, "   ");
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.sakhievents.exception.UnauthorizedException.class,
+                () -> blankKey.getAllBookings("any-key", null, null)
+        );
     }
 }

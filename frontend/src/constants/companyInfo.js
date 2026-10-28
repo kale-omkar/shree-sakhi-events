@@ -34,6 +34,11 @@ export const COMPANY_INFO = {
    */
   email: 'shreesakhi26@gmail.com',
   enquiryNotificationEmail: 'shreesakhi26@gmail.com',
+
+  /**
+   * Official Instagram Profile Link
+   */
+  instagram: 'https://www.instagram.com/shree_sakhi_events?cplk=MXJ2YXUyZmx1eGx6Mg==',
 };
 
 /**

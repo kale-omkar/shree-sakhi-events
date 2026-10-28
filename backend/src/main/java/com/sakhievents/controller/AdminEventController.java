@@ -3,13 +3,17 @@ package com.sakhievents.controller;
 import com.sakhievents.dto.ApiResponse;
 import com.sakhievents.dto.EventRequestDTO;
 import com.sakhievents.dto.EventResponseDTO;
+import com.sakhievents.exception.UnauthorizedException;
 import com.sakhievents.service.AdminEventService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 
 @RestController
@@ -21,8 +25,20 @@ import java.util.List;
 )
 public class AdminEventController {
 
+    private final AdminEventService adminEventService;
+    private final String adminApiKey;
+
+    public AdminEventController(AdminEventService adminEventService) {
+        this(adminEventService, System.getProperty("admin.api.key", ""));
+    }
+
     @Autowired
-    private AdminEventService adminEventService;
+    public AdminEventController(
+            AdminEventService adminEventService,
+            @Value("${admin.api.key:}") String adminApiKey) {
+        this.adminEventService = adminEventService;
+        this.adminApiKey = adminApiKey;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<EventResponseDTO>>> getAllEvents(
@@ -88,11 +104,32 @@ public class AdminEventController {
         return ResponseEntity.ok(ApiResponse.success(msg, updated));
     }
 
-    private static final String ADMIN_API_KEY = System.getProperty("admin.api.key", "sakhi-admin-2026");
+    // ─── Secure Admin Key Validation ──────────────────────────────────────────
+
+    private boolean isValidAdminKey(String key) {
+        String configuredKey = (adminApiKey != null && !adminApiKey.isBlank())
+                ? adminApiKey
+                : System.getProperty("admin.api.key");
+
+        // Fail-safe: if admin API key is unconfigured or blank, deny all access
+        if (configuredKey == null || configuredKey.isBlank()) {
+            return false;
+        }
+
+        if (key == null || key.isBlank()) {
+            return false;
+        }
+
+        // Constant-time comparison to mitigate timing attacks
+        return MessageDigest.isEqual(
+                configuredKey.getBytes(StandardCharsets.UTF_8),
+                key.getBytes(StandardCharsets.UTF_8)
+        );
+    }
 
     private void validateAdminKey(String key) {
-        if (key == null || !key.equals(ADMIN_API_KEY)) {
-            throw new RuntimeException("Unauthorised: invalid or missing admin API key");
+        if (!isValidAdminKey(key)) {
+            throw new UnauthorizedException("Unauthorised: invalid or missing admin API key");
         }
     }
 }

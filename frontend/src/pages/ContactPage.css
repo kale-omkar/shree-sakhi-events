@@ -324,6 +324,127 @@
   justify-content: center;
 }
 
+/* ── Instagram Social Channel Card ── */
+.contact-instagram-card {
+  margin-top: var(--space-xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  padding: var(--space-xl) var(--space-2xl);
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF5F8 60%, rgba(245, 158, 11, 0.07) 100%);
+  border: 1px solid rgba(194, 24, 91, 0.22);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.contact-instagram-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #c2185b 0%, #e91e63 45%, #f59e0b 100%);
+}
+
+.contact-instagram-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(194, 24, 91, 0.45);
+  box-shadow: var(--shadow-md), 0 0 24px rgba(194, 24, 91, 0.12);
+}
+
+.contact-instagram-card__content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex: 1;
+}
+
+.contact-instagram-card__icon-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(194, 24, 91, 0.12) 0%, rgba(245, 158, 11, 0.14) 100%);
+  color: var(--color-primary-dark);
+  border: 1px solid rgba(194, 24, 91, 0.25);
+  flex-shrink: 0;
+}
+
+.contact-instagram-card__details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.contact-social-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-primary-dark);
+}
+
+.contact-social-card__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c2185b;
+}
+
+.contact-instagram-card__title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.contact-instagram-card__desc {
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 620px;
+}
+
+.btn-instagram {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1.45rem;
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #c2185b 0%, #d81b60 40%, #e91e63 65%, #f59e0b 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(194, 24, 91, 0.28);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-instagram:hover,
+.btn-instagram:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(194, 24, 91, 0.4);
+  color: #ffffff;
+  outline: none;
+}
+
 /* ── CTA: Enquiry Promotion Banner ── */
 .contact-enquiry-banner {
   padding: var(--space-2xl) 0;
@@ -534,9 +655,30 @@
     text-align: center;
     justify-content: center;
   }
+
+  .contact-instagram-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-xl);
+    gap: var(--space-lg);
+  }
+
+  .contact-instagram-card__action {
+    width: 100%;
+  }
+
+  .contact-instagram-card__action .btn-instagram {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 640px) {
+  .contact-instagram-card__content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
   .contact-hero {
     padding-top: calc(70px + var(--space-2xl));
   }
