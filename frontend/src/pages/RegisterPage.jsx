@@ -21,31 +21,30 @@ function validate(form) {
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
-  const preselectedId  = searchParams.get('eventId');
+  const preselectedId = searchParams.get('eventId');
 
-  const [events, setEvents]           = useState([]);
+  const [events, setEvents] = useState([]);
   const [selectedEventId, setEventId] = useState(preselectedId || '');
-  const [selectedEvent, setSelected]  = useState(null);
-  const [form, setForm]               = useState(initialForm);
-  const [errors, setErrors]           = useState({});
-  const [touched, setTouched]         = useState({});
-  const [submitting, setSubmitting]   = useState(false);
-  const [success, setSuccess]         = useState(null);  // registration response
+  const [selectedEvent, setSelected] = useState(null);
+  const [form, setForm] = useState(initialForm);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(null);  // registration response
   const [serverError, setServerError] = useState(null);
   const [eventsLoading, setEventsLoading] = useState(true);
 
-  // Load available events
+  // AFTER:
   useEffect(() => {
-    eventsApi.getUpcoming()
+    eventsApi.getOpenForRegistration()           // ← call new endpoint directly
       .then(data => {
-        const open = data.filter(e => e.registrationStatus === 'OPEN');
-        setEvents(open);
+        setEvents(data);                         // ← no local filter needed; backend already returns only OPEN
         if (preselectedId) {
-          const found = open.find(e => String(e.id) === String(preselectedId));
+          const found = data.find(e => String(e.id) === String(preselectedId));
           if (found) setSelected(found);
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setEventsLoading(false));
   }, [preselectedId]);
 
@@ -56,7 +55,7 @@ export default function RegisterPage() {
       setSelected(found || null);
       if (!found && selectedEventId) {
         // Fetch from API if not in local list (e.g. came from URL directly)
-        eventsApi.getById(selectedEventId).then(setSelected).catch(() => {});
+        eventsApi.getById(selectedEventId).then(setSelected).catch(() => { });
       }
     } else {
       setSelected(null);
@@ -68,7 +67,7 @@ export default function RegisterPage() {
     const parsed = name === 'numberOfAttendees' ? parseInt(value) || 1 : value;
     const nextForm = { ...form, [name]: parsed };
     setForm(nextForm);
-    
+
     // Automatically clear errors once valid
     setErrors(prev => {
       const updated = { ...prev };
@@ -133,8 +132,8 @@ export default function RegisterPage() {
         <div className="container success-screen">
           <div className="success-icon" aria-hidden="true">
             <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-              <circle cx="32" cy="32" r="30" fill="rgba(34,197,94,0.12)" stroke="rgba(34,197,94,0.4)" strokeWidth="2"/>
-              <path d="M20 32 L28 40 L44 24" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="32" cy="32" r="30" fill="rgba(34,197,94,0.12)" stroke="rgba(34,197,94,0.4)" strokeWidth="2" />
+              <path d="M20 32 L28 40 L44 24" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
           <h1 className="success-title">You're Registered!</h1>
@@ -147,11 +146,11 @@ export default function RegisterPage() {
             </div>
             <div className="confirmation-details">
               {[
-                { label: 'Name',      value: success.fullName  },
-                { label: 'Email',     value: success.email     },
-                { label: 'Phone',     value: success.phone     },
+                { label: 'Name', value: success.fullName },
+                { label: 'Email', value: success.email },
+                { label: 'Phone', value: success.phone },
                 { label: 'Attendees', value: success.numberOfAttendees },
-                { label: 'Status',    value: success.status    },
+                { label: 'Status', value: success.status },
               ].map(row => (
                 <div key={row.label} className="conf-row">
                   <span className="conf-label">{row.label}</span>
@@ -180,7 +179,7 @@ export default function RegisterPage() {
 
       {/* Page Header */}
       <header className="page-hero" aria-labelledby="register-page-title">
-        <div className="page-hero__bg" aria-hidden="true"/>
+        <div className="page-hero__bg" aria-hidden="true" />
         <div className="container page-hero__content">
           <span className="section-label">Join Us</span>
           <h1 id="register-page-title">
@@ -209,7 +208,7 @@ export default function RegisterPage() {
                   Select Event <span className="req" aria-hidden="true">*</span>
                 </label>
                 {eventsLoading ? (
-                  <div className="skeleton" style={{ height: 48 }}/>
+                  <div className="skeleton" style={{ height: 48 }} />
                 ) : (
                   <select
                     id="event-select"
@@ -231,7 +230,7 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              <div className="form-divider" aria-hidden="true"/>
+              <div className="form-divider" aria-hidden="true" />
 
               {/* Full Name */}
               <div className="form-group">
@@ -322,16 +321,16 @@ export default function RegisterPage() {
                 </label>
                 <div className="attendees-picker">
                   <button type="button" id="attendees-dec"
-                          className="attendees-btn"
-                          onClick={() => setForm(f => ({ ...f, numberOfAttendees: Math.max(1, f.numberOfAttendees - 1) }))}
-                          aria-label="Decrease attendees">−</button>
+                    className="attendees-btn"
+                    onClick={() => setForm(f => ({ ...f, numberOfAttendees: Math.max(1, f.numberOfAttendees - 1) }))}
+                    aria-label="Decrease attendees">−</button>
                   <span id="reg-attendees" className="attendees-num" role="status" aria-label={`${form.numberOfAttendees} attendees`}>
                     {form.numberOfAttendees}
                   </span>
                   <button type="button" id="attendees-inc"
-                          className="attendees-btn"
-                          onClick={() => setForm(f => ({ ...f, numberOfAttendees: Math.min(10, f.numberOfAttendees + 1) }))}
-                          aria-label="Increase attendees">+</button>
+                    className="attendees-btn"
+                    onClick={() => setForm(f => ({ ...f, numberOfAttendees: Math.min(10, f.numberOfAttendees + 1) }))}
+                    aria-label="Increase attendees">+</button>
                 </div>
                 {touched.numberOfAttendees && errors.numberOfAttendees && (
                   <span className="form-error" role="alert">⚠ {errors.numberOfAttendees}</span>
@@ -340,7 +339,7 @@ export default function RegisterPage() {
 
               {/* Remarks */}
               <div className="form-group">
-                <label className="form-label" htmlFor="reg-remarks">Special Remarks <span style={{ opacity:0.5 }}>(Optional)</span></label>
+                <label className="form-label" htmlFor="reg-remarks">Special Remarks <span style={{ opacity: 0.5 }}>(Optional)</span></label>
                 <textarea
                   id="reg-remarks" name="remarks"
                   className={`form-input ${touched.remarks && errors.remarks ? 'error' : ''}`}
@@ -351,10 +350,10 @@ export default function RegisterPage() {
                   maxLength={500}
                   aria-describedby={errors.remarks ? 'err-remarks' : 'remarks-count'}
                 />
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   {touched.remarks && errors.remarks
                     ? <span id="err-remarks" className="form-error" role="alert">⚠ {errors.remarks}</span>
-                    : <span/>}
+                    : <span />}
                   <span id="remarks-count" className="form-hint">{form.remarks.length}/500</span>
                 </div>
               </div>
@@ -363,7 +362,7 @@ export default function RegisterPage() {
               {serverError && (
                 <div className="server-error" role="alert">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
                   {serverError}
                 </div>
@@ -379,7 +378,7 @@ export default function RegisterPage() {
               >
                 {submitting ? (
                   <>
-                    <span className="spinner" style={{ width:18, height:18, borderWidth:2 }} aria-hidden="true"/>
+                    <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} aria-hidden="true" />
                     Registering...
                   </>
                 ) : 'Complete Registration →'}
@@ -402,7 +401,7 @@ export default function RegisterPage() {
                 </div>
                 <div className="event-preview__info">
                   {[
-                    { label: '📅 Date',  value: selectedEvent.eventDate ? new Date(selectedEvent.eventDate).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : '—' },
+                    { label: '📅 Date', value: selectedEvent.eventDate ? new Date(selectedEvent.eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '—' },
                     { label: '📍 Venue', value: selectedEvent.venue },
                     { label: '🎟️ Spots', value: selectedEvent.spotsLeft > 0 ? `${selectedEvent.spotsLeft} remaining` : 'Fully booked' },
                   ].map(row => (

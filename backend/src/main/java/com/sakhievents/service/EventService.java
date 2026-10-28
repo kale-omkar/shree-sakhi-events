@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,6 +59,11 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    public List<EventResponseDTO> getOpenForRegistrationEvents() {
+        return eventRepository.findByRegistrationStatusOrderByEventDateAsc(Event.RegistrationStatus.OPEN).stream()
+                .map(EventResponseDTO::fromEntity).collect(Collectors.toList());
+    }
+
     public Event saveEvent(Event event) {
         return eventRepository.save(event);
     }
@@ -70,20 +76,25 @@ public class EventService {
      * No fictional upcoming exhibitions are seeded.
      */
     public void seedEventsIfEmpty() {
-        if (eventRepository.count() > 0) return;
+        if (eventRepository.count() > 0)
+            return;
 
         // Historical Exhibition 1: 23-24 August 2025 @ Patidar Bhavan
         Event exhibition1 = new Event();
         exhibition1.setName("Grand Exhibition @ Patidar Bhavan");
         exhibition1.setDescription(
-            "Shree Sakhi Events proudly hosted its Grand Exhibition on 23rd & 24th August 2025, at Patidar Bhavan, " +
-            "Nashik Road, Nashik bringing together talented entrepreneurs, shoppers under one roof. With an incredible " +
-            "footfall of 2,500+ visitors and 65+ stalls, the exhibition created a vibrant platform for women entrepreneurs " +
-            "to show with customers, promote their businesses, and turn their dreams into reality. Our exhibition was " +
-            "more than just a shopping event—it was a celebration of women's empowerment, entrepreneurship, creativity, " +
-            "an overwhelming response from visitors and exhibitors made the event a memorable success. " +
-            "Our Valued Sponsors: Main Sponsor: R M Silver | Co-Sponsor: Patole Diagnostic Centre | Associate Sponsor: Food Basket."
-        );
+                "Shree Sakhi Events proudly hosted its Grand Exhibition on 23rd & 24th August 2025, at Patidar Bhavan, "
+                        +
+                        "Nashik Road, Nashik bringing together talented entrepreneurs, shoppers under one roof. With an incredible "
+                        +
+                        "footfall of 2,500+ visitors and 65+ stalls, the exhibition created a vibrant platform for women entrepreneurs "
+                        +
+                        "to show with customers, promote their businesses, and turn their dreams into reality. Our exhibition was "
+                        +
+                        "more than just a shopping event—it was a celebration of women's empowerment, entrepreneurship, creativity, "
+                        +
+                        "an overwhelming response from visitors and exhibitors made the event a memorable success. " +
+                        "Our Valued Sponsors: Main Sponsor: R M Silver | Co-Sponsor: Patole Diagnostic Centre | Associate Sponsor: Food Basket.");
         exhibition1.setEventDate(LocalDate.of(2025, 8, 23));
         exhibition1.setEndDate(LocalDate.of(2025, 8, 24));
         exhibition1.setVenue("Patidar Bhavan");
@@ -97,27 +108,31 @@ public class EventService {
         exhibition1.setContactPhone("9145683687");
         exhibition1.setIsFeatured(true);
         exhibition1.setHighlights(Arrays.asList(
-            "2,500+ visitor footfall",
-            "65+ women entrepreneur stalls",
-            "Main Sponsor: R M Silver",
-            "Co-Sponsor: Patole Diagnostic Centre",
-            "Associate Sponsor: Food Basket"
-        ));
-        exhibition1.setTags(Arrays.asList("Exhibition", "Women Empowerment", "Patidar Bhavan", "Nashik Road", "August 2025"));
+                "2,500+ visitor footfall",
+                "65+ women entrepreneur stalls",
+                "Main Sponsor: R M Silver",
+                "Co-Sponsor: Patole Diagnostic Centre",
+                "Associate Sponsor: Food Basket"));
+        exhibition1.setTags(
+                Arrays.asList("Exhibition", "Women Empowerment", "Patidar Bhavan", "Nashik Road", "August 2025"));
         eventRepository.save(exhibition1);
 
         // Historical Exhibition 2: 11-12 October 2025 @ Rajmata Mangal Karyalay
         Event exhibition2 = new Event();
         exhibition2.setName("Second Grand Exhibition @ Rajmata Mangal Karyalay");
         exhibition2.setDescription(
-            "Shree Sakhi Events proudly hosted its Second Grand Exhibition on 11, 12 October 2025 @ Rajmata Mangal Karyalay, " +
-            "Rasbihari Link Road, Meri, Nashik bringing together talented entrepreneurs, shoppers under one roof. With an " +
-            "incredible footfall of 2,500+ visitors and 65+ stalls, the exhibition created a vibrant platform for women entrepreneurs " +
-            "to show with customers, promote their businesses, and turn their dreams into reality. Our exhibition was more than " +
-            "just a shopping event—it was a celebration of women's empowerment, entrepreneurship, creativity, an overwhelming " +
-            "response from visitors and exhibitors made the event a memorable success. " +
-            "Our Valued Sponsors: Title Sponsor: Dr. Nidhi's Multispecialty Clinic | Associated Sponsor: Dhobi Junction."
-        );
+                "Shree Sakhi Events proudly hosted its Second Grand Exhibition on 11, 12 October 2025 @ Rajmata Mangal Karyalay, "
+                        +
+                        "Rasbihari Link Road, Meri, Nashik bringing together talented entrepreneurs, shoppers under one roof. With an "
+                        +
+                        "incredible footfall of 2,500+ visitors and 65+ stalls, the exhibition created a vibrant platform for women entrepreneurs "
+                        +
+                        "to show with customers, promote their businesses, and turn their dreams into reality. Our exhibition was more than "
+                        +
+                        "just a shopping event—it was a celebration of women's empowerment, entrepreneurship, creativity, an overwhelming "
+                        +
+                        "response from visitors and exhibitors made the event a memorable success. " +
+                        "Our Valued Sponsors: Title Sponsor: Dr. Nidhi's Multispecialty Clinic | Associated Sponsor: Dhobi Junction.");
         exhibition2.setEventDate(LocalDate.of(2025, 10, 11));
         exhibition2.setEndDate(LocalDate.of(2025, 10, 12));
         exhibition2.setVenue("Rajmata Mangal Karyalay");
@@ -131,13 +146,41 @@ public class EventService {
         exhibition2.setContactPhone("9145683687");
         exhibition2.setIsFeatured(true);
         exhibition2.setHighlights(Arrays.asList(
-            "2,500+ visitor footfall",
-            "65+ women entrepreneur stalls",
-            "Title Sponsor: Dr. Nidhi's Multispecialty Clinic",
-            "Associated Sponsor: Dhobi Junction"
-        ));
-        exhibition2.setTags(Arrays.asList("Exhibition", "Women Empowerment", "Rajmata Mangal Karyalay", "Meri", "October 2025"));
+                "2,500+ visitor footfall",
+                "65+ women entrepreneur stalls",
+                "Title Sponsor: Dr. Nidhi's Multispecialty Clinic",
+                "Associated Sponsor: Dhobi Junction"));
+        exhibition2.setTags(
+                Arrays.asList("Exhibition", "Women Empowerment", "Rajmata Mangal Karyalay", "Meri", "October 2025"));
         eventRepository.save(exhibition2);
+
+        // Upcoming event open for registration
+        Event upcoming1 = new Event();
+        upcoming1.setName("Third Grand Exhibition — Nashik 2026");
+        upcoming1.setDescription(
+                "Shree Sakhi Events announces its Third Grand Exhibition — a vibrant platform for women entrepreneurs, "
+                        +
+                        "shoppers, and supporters to come together. Featuring 65+ stalls, live demos, and networking opportunities. "
+                        +
+                        "Secure your stall or register as a visitor today!");
+        upcoming1.setEventDate(LocalDate.of(2026, 12, 20));
+        upcoming1.setEndDate(LocalDate.of(2026, 12, 21));
+        upcoming1.setVenue("TBD — Nashik");
+        upcoming1.setVenueAddress("Nashik, Maharashtra");
+        upcoming1.setEventType(Event.EventType.UPCOMING);
+        upcoming1.setRegistrationStatus(Event.RegistrationStatus.OPEN);
+        upcoming1.setMaxCapacity(3000);
+        upcoming1.setRegisteredCount(0);
+        upcoming1.setCategory("Exhibition");
+        upcoming1.setOrganizer("Shree Sakhi Events");
+        upcoming1.setContactPhone("9145683687");
+        upcoming1.setIsFeatured(true);
+        upcoming1.setHighlights(Arrays.asList(
+                "65+ women entrepreneur stalls",
+                "Open for visitor & stall registrations",
+                "Women empowerment platform"));
+        upcoming1.setTags(Arrays.asList("Exhibition", "Women Empowerment", "Nashik", "December 2026"));
+        eventRepository.save(upcoming1);
 
         System.out.println("✅ Documented historical exhibitions seeded successfully into the database.");
     }
