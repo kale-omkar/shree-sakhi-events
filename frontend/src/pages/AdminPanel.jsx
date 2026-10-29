@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminEventsApi } from '../api/adminApi';
 import AdminBookingsSection from '../components/AdminBookingsSection';
+import AdminEnquiriesSection from '../components/AdminEnquiriesSection';
 import './AdminPanel.css';
 
 const EMPTY_FORM = {
@@ -50,7 +51,7 @@ export default function AdminPanel() {
   const [error, setError]     = useState(null);
 
   // ── UI state ──
-  const [activeTab, setActiveTab] = useState('events'); // 'events' | 'bookings'
+  const [activeTab, setActiveTab] = useState('events'); // 'events' | 'bookings' | 'enquiries'
   const [view, setView]       = useState('list'); // 'list' | 'form' | 'confirm-delete'
   const [editingEvent, setEditingEvent] = useState(null);
   const [deletingEvent, setDeletingEvent] = useState(null);
@@ -68,7 +69,7 @@ export default function AdminPanel() {
     adminEventsApi.getAll()
       .then(setEvents)
       .catch(err => {
-        if (err.message && err.message.toLowerCase().includes('unauthorised')) {
+        if (err.message && err.message.toLowerCase().includes('unauthori')) {
           sessionStorage.removeItem('admin_authed');
           sessionStorage.removeItem('admin_api_key');
           setAuthed(false);
@@ -358,8 +359,8 @@ export default function AdminPanel() {
 
       <div className="admin-body">
 
-        {/* ── Tab Switcher: Events vs Bookings ── */}
-        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
+        {/* ── Tab Switcher: Events vs Bookings vs Enquiries ── */}
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem', flexWrap: 'wrap' }}>
           <button
             type="button"
             className={`btn btn-sm ${activeTab === 'events' ? 'btn-primary' : 'btn-ghost'}`}
@@ -376,10 +377,30 @@ export default function AdminPanel() {
           >
             🎟️ Bookings & Stalls
           </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${activeTab === 'enquiries' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveTab('enquiries')}
+            id="admin-tab-enquiries"
+          >
+            📬 Enquiries
+          </button>
         </div>
 
         {activeTab === 'bookings' && (
           <AdminBookingsSection showToast={showToast} />
+        )}
+
+        {activeTab === 'enquiries' && (
+          <AdminEnquiriesSection
+            showToast={showToast}
+            onUnauthorized={() => {
+              sessionStorage.removeItem('admin_authed');
+              sessionStorage.removeItem('admin_api_key');
+              setAuthed(false);
+              setLoginErr('Session expired or invalid admin API key. Please sign in again.');
+            }}
+          />
         )}
 
         {activeTab === 'events' && (

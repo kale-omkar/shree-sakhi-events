@@ -25,10 +25,16 @@ const handleResponse = async (res) => {
   try {
     data = await res.json();
   } catch (err) {
+    if (res.status === 401 || res.status === 403) {
+      throw new Error('Unauthorised: invalid or missing admin API key');
+    }
     throw new Error(`Server returned HTTP ${res.status}`);
   }
 
   if (!res.ok || !data.success) {
+    if (res.status === 401 || res.status === 403) {
+      throw new Error(data.message || 'Unauthorised: invalid or missing admin API key');
+    }
     if (data.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
       const messages = Object.entries(data.data)
         .map(([field, msg]) => `${msg}`)
@@ -80,4 +86,16 @@ export const adminEventsApi = {
       method: 'PATCH',
       headers: adminHeaders,
     }).then(handleResponse),
+};
+
+export const adminEnquiriesApi = {
+  /** GET /api/enquiries — list all enquiries (newest first). Optional keyOverride for auth check */
+  getAll: (keyOverride) =>
+    fetch(`${BASE_URL}/enquiries`, { headers: getAdminHeaders(keyOverride) })
+      .then(handleResponse),
+
+  /** GET /api/enquiries/:id — get enquiry by ID */
+  getById: (id) =>
+    fetch(`${BASE_URL}/enquiries/${id}`, { headers: adminHeaders })
+      .then(handleResponse),
 };
