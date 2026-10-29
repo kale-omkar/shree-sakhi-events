@@ -678,7 +678,7 @@ export default function AdminPanel() {
                     <option value="COMING_SOON">COMING_SOON</option>
                     <option value="NOT_REQUIRED">NOT_REQUIRED</option>
                   </select>
-                  {formErrors.registrationStatus && <span className="form-error">âš  {formErrors.registrationStatus}</span>}
+                  {formErrors.registrationStatus && <span className="form-error">⚠ {formErrors.registrationStatus}</span>}
                 </div>
               </div>
 
