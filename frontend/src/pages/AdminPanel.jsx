@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { adminEventsApi } from '../api/adminApi';
 import AdminBookingsSection from '../components/AdminBookingsSection';
 import AdminEnquiriesSection from '../components/AdminEnquiriesSection';
@@ -182,7 +182,11 @@ export default function AdminPanel() {
     }
     if (!formData.venue.trim()) errs.venue = 'Venue is required';
     if (!formData.eventType) errs.eventType = 'Event type is required';
-    if (!formData.registrationStatus) errs.registrationStatus = 'Registration status is required';
+    if (!formData.registrationStatus) {
+      errs.registrationStatus = 'Registration status is required';
+    } else if (formData.eventType === 'PAST' && formData.registrationStatus === 'OPEN') {
+      errs.registrationStatus = 'Past events cannot have OPEN registration status';
+    }
     if (formData.endDate && formData.eventDate && formData.endDate < formData.eventDate)
       errs.endDate = 'End date cannot be before start date';
     if (formData.maxCapacity && Number(formData.maxCapacity) < 1)
@@ -627,7 +631,21 @@ export default function AdminPanel() {
                   <label htmlFor="admin-event-type" className="form-label">Event Type <span className="req">*</span></label>
                   <select id="admin-event-type" className="form-input"
                     value={formData.eventType}
-                    onChange={e => setFormData(d => ({ ...d, eventType: e.target.value }))}>
+                    onChange={e => {
+                      const newType = e.target.value;
+                      setFormData(d => ({
+                        ...d,
+                        eventType: newType,
+                        registrationStatus: newType === 'PAST' && d.registrationStatus === 'OPEN' ? 'CLOSED' : d.registrationStatus,
+                      }));
+                      if (newType === 'PAST') {
+                        setFormErrors(prev => {
+                          const next = { ...prev };
+                          delete next.registrationStatus;
+                          return next;
+                        });
+                      }
+                    }}>
                     <option value="UPCOMING">UPCOMING</option>
                     <option value="ONGOING">ONGOING</option>
                     <option value="PAST">PAST</option>
@@ -635,14 +653,32 @@ export default function AdminPanel() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="admin-reg-status" className="form-label">Registration Status <span className="req">*</span></label>
-                  <select id="admin-reg-status" className="form-input"
+                  <select id="admin-reg-status" className={`form-input ${formErrors.registrationStatus ? 'error' : ''}`}
                     value={formData.registrationStatus}
-                    onChange={e => setFormData(d => ({ ...d, registrationStatus: e.target.value }))}>
-                    <option value="OPEN">OPEN</option>
+                    onChange={e => {
+                      const newStatus = e.target.value;
+                      setFormData(d => ({ ...d, registrationStatus: newStatus }));
+                      if (formData.eventType === 'PAST' && newStatus === 'OPEN') {
+                        setFormErrors(prev => ({
+                          ...prev,
+                          registrationStatus: 'Past events cannot have OPEN registration status',
+                        }));
+                      } else {
+                        setFormErrors(prev => {
+                          const next = { ...prev };
+                          delete next.registrationStatus;
+                          return next;
+                        });
+                      }
+                    }}>
+                    <option value="OPEN" disabled={formData.eventType === 'PAST'}>
+                      OPEN{formData.eventType === 'PAST' ? ' (Not allowed for past events)' : ''}
+                    </option>
                     <option value="CLOSED">CLOSED</option>
                     <option value="COMING_SOON">COMING_SOON</option>
                     <option value="NOT_REQUIRED">NOT_REQUIRED</option>
                   </select>
+                  {formErrors.registrationStatus && <span className="form-error">âš  {formErrors.registrationStatus}</span>}
                 </div>
               </div>
 
