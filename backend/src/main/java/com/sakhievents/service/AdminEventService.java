@@ -52,6 +52,7 @@ public class AdminEventService {
     public EventResponseDTO createEvent(EventRequestDTO dto) {
         validateDates(dto);
         validateCapacity(dto);
+        validateStatus(dto);
 
         Event event = new Event();
         applyDto(dto, event);
@@ -68,6 +69,7 @@ public class AdminEventService {
     public EventResponseDTO updateEvent(Long id, EventRequestDTO dto) {
         validateDates(dto);
         validateCapacity(dto);
+        validateStatus(dto);
 
         Event event = findOrThrow(id);
         applyDto(dto, event);
@@ -134,6 +136,13 @@ public class AdminEventService {
                 throw new RuntimeException(
                     "End date (" + dto.getEndDate() + ") cannot be before the event start date (" + dto.getEventDate() + ")");
             }
+        }
+    }
+
+    /** Validates that a PAST event cannot have OPEN registration status. */
+    private void validateStatus(EventRequestDTO dto) {
+        if ("PAST".equalsIgnoreCase(dto.getEventType()) && "OPEN".equalsIgnoreCase(dto.getRegistrationStatus())) {
+            throw new RuntimeException("Past events cannot have OPEN registration status. Please choose CLOSED or NOT_REQUIRED.");
         }
     }
 
