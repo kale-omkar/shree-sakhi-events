@@ -181,6 +181,8 @@ export default function AdminPanel() {
       errs.eventDate = 'Start date cannot be in the past for upcoming events';
     }
     if (!formData.venue.trim()) errs.venue = 'Venue is required';
+    if (!formData.category.trim()) errs.category = 'Category is required';
+    if (!formData.imageUrl.trim()) errs.imageUrl = 'Event image URL is required';
     if (!formData.eventType) errs.eventType = 'Event type is required';
     if (!formData.registrationStatus) {
       errs.registrationStatus = 'Registration status is required';
@@ -558,11 +560,12 @@ export default function AdminPanel() {
                   {formErrors.name && <span className="form-error">⚠ {formErrors.name}</span>}
                 </div>
                 <div className="form-group">
-                  <label htmlFor="admin-category" className="form-label">Category</label>
-                  <input id="admin-category" type="text" className="form-input"
+                  <label htmlFor="admin-category" className="form-label">Category <span className="req">*</span></label>
+                  <input id="admin-category" type="text" className={`form-input ${formErrors.category ? 'error' : ''}`}
                     placeholder="e.g. Exhibition, Workshop, Cultural"
                     value={formData.category}
                     onChange={e => setFormData(d => ({ ...d, category: e.target.value }))}/>
+                  {formErrors.category && <span className="form-error">âš  {formErrors.category}</span>}
                 </div>
               </div>
 
@@ -731,11 +734,12 @@ export default function AdminPanel() {
               {/* Row 7: Image URLs */}
               <div className="admin-form__row admin-form__row--2">
                 <div className="form-group">
-                  <label htmlFor="admin-image-url" className="form-label">Image URL</label>
-                  <input id="admin-image-url" type="url" className="form-input"
+                  <label htmlFor="admin-image-url" className="form-label">Image URL <span className="req">*</span></label>
+                  <input id="admin-image-url" type="url" className={`form-input ${formErrors.imageUrl ? 'error' : ''}`}
                     placeholder="https://…/image.jpg"
                     value={formData.imageUrl}
                     onChange={e => setFormData(d => ({ ...d, imageUrl: e.target.value }))}/>
+                  {formErrors.imageUrl && <span className="form-error">âš  {formErrors.imageUrl}</span>}
                 </div>
                 <div className="form-group">
                   <label htmlFor="admin-banner-url" className="form-label">Banner URL</label>

@@ -1,4 +1,4 @@
-package com.sakhievents.dto;
+﻿package com.sakhievents.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -44,8 +44,11 @@ public class EventRequestDTO {
     @Pattern(regexp = "OPEN|CLOSED|COMING_SOON|NOT_REQUIRED", message = "Registration status must be one of: OPEN, CLOSED, COMING_SOON, NOT_REQUIRED")
     private String registrationStatus;
 
-    // Optional fields
+    // imageUrl is required - event cards must always have an image
+    @NotBlank(message = "Event image URL is required")
     private String imageUrl;
+
+    // bannerUrl is optional
     private String bannerUrl;
 
     @Min(value = 1, message = "Maximum capacity must be at least 1")
@@ -58,6 +61,7 @@ public class EventRequestDTO {
     private List<String> highlights;
     private List<String> tags;
 
+    @NotBlank(message = "Category is required")
     @Size(max = 100, message = "Category must not exceed 100 characters")
     private String category;
 
