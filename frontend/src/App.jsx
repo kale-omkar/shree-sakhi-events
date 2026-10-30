@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -15,9 +15,16 @@ import BookingStatusPage from './pages/BookingStatusPage';
 import AdminPanel from './pages/AdminPanel';
 import ContactPage from './pages/ContactPage';
 import EnquiryPage from './pages/EnquiryPage';
+import { useEffect } from 'react';
 import './App.css';
 
 function App() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <>
       <Navbar />
