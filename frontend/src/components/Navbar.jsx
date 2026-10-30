@@ -31,8 +31,16 @@ const NAV_LINKS = [
         badge: 'Archive',
         desc: 'Previous exhibitions & sponsor records'
       },
+      {
+        label: 'Photo Gallery',
+        to: '/gallery',
+        icon: '📸',
+        badge: 'Moments',
+        desc: 'Real glimpses of exhibitions & stalls'
+      },
     ],
   },
+  { label: 'Gallery', to: '/gallery' },
   { label: 'Book Stall', to: '/book' },
   { label: 'Booking Status', to: '/book/status' },
   { label: 'Admin', to: '/admin' },

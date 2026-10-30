@@ -36,8 +36,12 @@ export default function RegisterPage() {
 
   // Load available events
   useEffect(() => {
+    let cancelled = false;
+    setEventsLoading(true);
+    setServerError(null);
     eventsApi.getUpcoming()
       .then(data => {
+        if (cancelled) return;
         const open = data.filter(e => e.registrationStatus === 'OPEN');
         setEvents(open);
         if (preselectedId) {
@@ -45,8 +49,14 @@ export default function RegisterPage() {
           if (found) setSelected(found);
         }
       })
-      .catch(() => {})
-      .finally(() => setEventsLoading(false));
+      .catch(err => {
+        if (cancelled) return;
+        setServerError('Unable to load events. Please ensure the backend is running.');
+      })
+      .finally(() => {
+        if (!cancelled) setEventsLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [preselectedId]);
 
   // Update selected event details when ID changes

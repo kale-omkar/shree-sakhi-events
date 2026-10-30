@@ -35,6 +35,7 @@ export default function Footer() {
             <li><Link to="/events" className="site-footer__link">All Events</Link></li>
             <li><Link to="/upcoming-events" className="site-footer__link">Upcoming Events</Link></li>
             <li><Link to="/past-events" className="site-footer__link">Past Exhibitions</Link></li>
+            <li><Link to="/gallery" className="site-footer__link">Photo Gallery</Link></li>
             <li><Link to="/register" className="site-footer__link">Register / Booking</Link></li>
           </ul>
         </div>

@@ -12,6 +12,7 @@ import BookingPage from './pages/BookingPage';
 import MockPaymentPage from './pages/MockPaymentPage';
 import BookingConfirmPage from './pages/BookingConfirmPage';
 import BookingStatusPage from './pages/BookingStatusPage';
+import GalleryPage from './pages/GalleryPage';
 import AdminPanel from './pages/AdminPanel';
 import './App.css';
 
@@ -25,6 +26,7 @@ function App() {
         <Route path="/events"           element={<EventsPage />} />
         <Route path="/upcoming-events"  element={<UpcomingEventsPage />} />
         <Route path="/past-events"      element={<PastEventsPage />} />
+        <Route path="/gallery"          element={<GalleryPage />} />
         <Route path="/events/:id"       element={<EventDetailPage />} />
         <Route path="/register"         element={<RegisterPage />} />
         <Route path="/book"             element={<BookingPage />} />

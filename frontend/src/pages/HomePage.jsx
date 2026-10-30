@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { eventsApi } from '../api/eventsApi';
 import { COMPANY_INFO } from '../constants/companyInfo';
 import EventCard from '../components/EventCard';
+import GallerySection from '../components/GallerySection';
 import './HomePage.css';
 
 export default function HomePage() {
@@ -228,6 +229,9 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ── OUR GALLERY (REAL EXHIBITION MOMENTS) ── */}
+      <GallerySection />
 
       {/* ── DOCUMENTED PLATFORM HIGHLIGHTS ── */}
       <section className="home-section why-section" aria-labelledby="why-heading">
