@@ -120,6 +120,37 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── GLIMPSES OF OUR EVENTS ── */}
+      <section className="home-section glimpses-section" aria-labelledby="glimpses-heading">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-label">Memorable Moments</span>
+            <h2 id="glimpses-heading">
+              Glimpses of <span className="text-gradient">Our Events</span>
+            </h2>
+            <p>Celebrating entrepreneurship, teamwork and memorable moments at Shree Sakhi Events.</p>
+          </div>
+          <div className="glimpses-grid">
+            <figure className="glimpses-item">
+              <img
+                src="/images/event-team-1.png"
+                alt="Women entrepreneurs and team at a Shree Sakhi Events exhibition"
+                className="glimpses-img"
+                loading="lazy"
+              />
+            </figure>
+            <figure className="glimpses-item">
+              <img
+                src="/images/event-team-2.png"
+                alt="Exhibition stalls and attendees at a Shree Sakhi Events grand exhibition"
+                className="glimpses-img"
+                loading="lazy"
+              />
+            </figure>
+          </div>
+        </div>
+      </section>
+
       {/* ── FEATURED EXHIBITIONS & EVENTS ── */}
       <section className="home-section featured-section" aria-labelledby="featured-heading">
         <div className="container">
