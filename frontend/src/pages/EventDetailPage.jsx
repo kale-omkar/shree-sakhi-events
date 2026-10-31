@@ -29,6 +29,7 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lightboxImg, setLightboxImg] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -64,7 +65,15 @@ export default function EventDetailPage() {
       {/* ── Hero Banner ── */}
       <section className="event-detail__hero" aria-label={`${event.name} banner`}>
         <div className="event-detail__hero-bg" aria-hidden="true">
-          <EventHeroArt category={event.category} />
+          {(event.bannerUrl || event.imageUrl) ? (
+            <img
+              src={event.bannerUrl || event.imageUrl}
+              alt={event.name}
+              className="event-detail__hero-img"
+            />
+          ) : (
+            <EventHeroArt category={event.category} />
+          )}
         </div>
         <div className="event-detail__hero-overlay" aria-hidden="true"/>
 
@@ -126,6 +135,19 @@ export default function EventDetailPage() {
       <div className="container event-detail__body">
         <div className="event-detail__main">
 
+          {/* Cover / Poster Image */}
+          {event.imageUrl && (
+            <div className="event-detail__poster-card">
+              <img
+                src={event.imageUrl}
+                alt={event.name}
+                className="event-detail__poster-img"
+                onClick={() => setLightboxImg(event.imageUrl)}
+                title="Click to view full image"
+              />
+            </div>
+          )}
+
           {/* Description */}
           <section className="detail-section" aria-labelledby="desc-heading">
             <h2 id="desc-heading" className="detail-section__title">About This Event</h2>
@@ -144,6 +166,33 @@ export default function EventDetailPage() {
                   </li>
                 ))}
               </ul>
+            </section>
+          )}
+
+          {/* Gallery Images */}
+          {event.images?.length > 0 && (
+            <section className="detail-section" aria-labelledby="gallery-heading">
+              <h2 id="gallery-heading" className="detail-section__title">
+                Event Gallery ({event.images.length})
+              </h2>
+              <div className="event-detail__gallery-grid">
+                {event.images.map((imgUrl, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="event-detail__gallery-thumb-btn"
+                    onClick={() => setLightboxImg(imgUrl)}
+                    aria-label={`View photo ${i + 1}`}
+                  >
+                    <img
+                      src={imgUrl}
+                      alt={`${event.name} photo ${i + 1}`}
+                      className="event-detail__gallery-thumb"
+                      loading="lazy"
+                    />
+                  </button>
+                ))}
+              </div>
             </section>
           )}
 
@@ -263,6 +312,28 @@ export default function EventDetailPage() {
           </Link>
         </aside>
       </div>
+
+      {/* ── Lightbox Modal ── */}
+      {lightboxImg && (
+        <div
+          className="event-detail__lightbox"
+          onClick={() => setLightboxImg(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="event-detail__lightbox-content" onClick={e => e.stopPropagation()}>
+            <img src={lightboxImg} alt="Enlarged event view" />
+            <button
+              type="button"
+              className="event-detail__lightbox-close"
+              onClick={() => setLightboxImg(null)}
+              aria-label="Close image preview"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
