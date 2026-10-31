@@ -51,6 +51,9 @@ public class EventRequestDTO {
     // bannerUrl is optional
     private String bannerUrl;
 
+    // Additional gallery images (Cloudinary URLs)
+    private List<String> images;
+
     @Min(value = 1, message = "Maximum capacity must be at least 1")
     @Max(value = 100000, message = "Maximum capacity must not exceed 100,000")
     private Integer maxCapacity;

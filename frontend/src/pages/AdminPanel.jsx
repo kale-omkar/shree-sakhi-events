@@ -11,6 +11,7 @@ const EMPTY_FORM = {
   maxCapacity: '', registeredCount: '', highlights: '',
   tags: '', category: '', organizer: '',
   contactEmail: '', contactPhone: '', isFeatured: false,
+  images: [], // gallery images (Cloudinary URLs)
 };
 
 const STATUS_LABELS = {
@@ -191,6 +192,7 @@ export default function AdminPanel() {
       contactEmail: event.contactEmail || '',
       contactPhone: event.contactPhone || '',
       isFeatured: !!event.isFeatured,
+      images: event.images || [],
     });
     setFormErrors({});
     setView('form');
@@ -277,6 +279,7 @@ export default function AdminPanel() {
         contactEmail: formData.contactEmail?.trim() || null,
         contactPhone: formData.contactPhone ? formData.contactPhone.replace(/[\s\-]/g, '') : null,
         isFeatured: !!formData.isFeatured,
+        images: formData.images || [],
       };
 
       if (editingEvent) {
@@ -815,6 +818,45 @@ export default function AdminPanel() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              
+              {/* Gallery Images */}
+              <div className="form-group">
+                <label className="form-label">
+                  Gallery Images <span className="note">(optional — upload multiple, shown in event detail page)</span>
+                </label>
+                <input
+                  id="admin-gallery-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'block', width: '100%', padding: '0.4rem 0', cursor: 'pointer' }}
+                  disabled={uploading}
+                  onChange={handleGalleryUpload}
+                />
+                {uploading && <p style={{ fontSize: '0.8rem', color: 'var(--color-primary)', marginTop: '0.3rem' }}>Uploading…</p>}
+                {formData.images && formData.images.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.5rem', marginTop: '0.75rem' }}>
+                    {formData.images.map((url, idx) => (
+                      <div key={idx} style={{ position: 'relative' }}>
+                        <img
+                          src={url}
+                          alt={`Gallery ${idx + 1}`}
+                          style={{ width: '100%', height: '90px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--color-border)' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryImage(idx)}
+                          style={{ position: 'absolute', top: '3px', right: '3px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', fontSize: '12px', lineHeight: '20px', textAlign: 'center' }}
+                          title="Remove image"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Highlights */}
