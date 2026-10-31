@@ -162,6 +162,36 @@ export default function AdminPanel() {
     }
   };
 
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    for (const f of files) {
+      if (!f.type.startsWith('image/')) {
+        showToast('Please select only image files (JPG, PNG, WEBP).', 'error');
+        return;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        showToast(`"${f.name}" is too large. Max 5 MB per image.`, 'error');
+        return;
+      }
+    }
+    setUploading(true);
+    try {
+      const urls = await Promise.all(files.map(f => uploadToCloudinary(f)));
+      setFormData(d => ({ ...d, images: [...(d.images || []), ...urls] }));
+      showToast(`${urls.length} image${urls.length > 1 ? 's' : ''} uploaded!`);
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeGalleryImage = (index) => {
+    setFormData(d => ({ ...d, images: d.images.filter((_, i) => i !== index) }));
+  };
+
   // ── Form helpers ──
   const openCreate = () => {
     setEditingEvent(null);
