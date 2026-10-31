@@ -84,6 +84,12 @@ export default function EventDetailPage() {
         {/* Background art & subtle ambient illumination */}
         <div className="event-detail__hero-bg" aria-hidden="true">
           <EventHeroArt category={event.category} />
+          {event.bannerUrl && (
+            <div
+              className="event-detail__hero-ambient"
+              style={{ backgroundImage: `url(${event.bannerUrl})` }}
+            />
+          )}
         </div>
         <div className="event-detail__hero-overlay" aria-hidden="true" />
 

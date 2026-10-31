@@ -123,6 +123,7 @@ public class AdminEventService {
         event.setRegistrationStatus(Event.RegistrationStatus.valueOf(dto.getRegistrationStatus()));
         event.setImageUrl(dto.getImageUrl());
         event.setBannerUrl(dto.getBannerUrl());
+        event.setImages(dto.getImages() != null ? dto.getImages() : new java.util.ArrayList<>());
         event.setMaxCapacity(dto.getMaxCapacity());
         event.setRegisteredCount(dto.getRegisteredCount() != null ? dto.getRegisteredCount() : 0);
         event.setHighlights(dto.getHighlights());

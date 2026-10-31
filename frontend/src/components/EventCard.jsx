@@ -50,21 +50,6 @@ export default function EventCard({ event, featured = false }) {
             <EventPlaceholderArt category={event.category} />
           </div>
         )}
-
-        {/* Overlay badges */}
-        <div className="event-card__overlay">
-          <span className={`badge badge-cat`}>{event.category || 'Event'}</span>
-          {featured && (
-            <span className="event-card__featured-tag" aria-label="Featured event">
-              ★ Featured
-            </span>
-          )}
-        </div>
-
-        {/* Type tag */}
-        <div className="event-card__type-tag">
-          {typeLabel[event.eventType] || event.eventType}
-        </div>
       </div>
 
       {/* Content */}

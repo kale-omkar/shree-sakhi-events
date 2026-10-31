@@ -50,9 +50,14 @@ public class Event {
     @Column(nullable = false)
     private RegistrationStatus registrationStatus; // OPEN, CLOSED, COMING_SOON, NOT_REQUIRED
 
-    private String imageUrl;
+    private String imageUrl;   // cover / thumbnail (first image)
 
-    private String bannerUrl;
+    private String bannerUrl;  // hero banner at top of detail page
+
+    @ElementCollection
+    @CollectionTable(name = "event_images", joinColumns = @JoinColumn(name = "event_id"))
+    @Column(name = "image_url", length = 1000)
+    private List<String> images; // additional gallery images
 
     private Integer maxCapacity;
 
