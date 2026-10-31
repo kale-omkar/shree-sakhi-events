@@ -11,6 +11,7 @@ const EMPTY_FORM = {
   maxCapacity: '', registeredCount: '', highlights: '',
   tags: '', category: '', organizer: '',
   contactEmail: '', contactPhone: '', isFeatured: false,
+  images: [], // gallery images (Cloudinary URLs)
 };
 
 const STATUS_LABELS = {
@@ -58,6 +59,7 @@ export default function AdminPanel() {
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [formErrors, setFormErrors] = useState({});
   const [saving, setSaving]   = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [toast, setToast]     = useState(null); // { msg, type }
   const [searchQ, setSearchQ] = useState('');
 
@@ -120,6 +122,76 @@ export default function AdminPanel() {
     setTimeout(() => setToast(null), 3500);
   };
 
+  // -- Cloudinary Image Upload --
+  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+  const uploadToCloudinary = async (file) => {
+    const data = new FormData();
+    data.append('file', file);
+    data.append('upload_preset', UPLOAD_PRESET);
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      { method: 'POST', body: data }
+    );
+    if (!res.ok) throw new Error('Image upload failed. Check your Cloudinary upload preset.');
+    const json = await res.json();
+    return json.secure_url;
+  };
+
+  const handleImageUpload = async (e, field) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file (JPG, PNG, WEBP).', 'error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image must be smaller than 5 MB.', 'error');
+      return;
+    }
+    setUploading(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      setFormData(d => ({ ...d, [field]: url }));
+      showToast('Image uploaded successfully!');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    for (const f of files) {
+      if (!f.type.startsWith('image/')) {
+        showToast('Please select only image files (JPG, PNG, WEBP).', 'error');
+        return;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        showToast(`"${f.name}" is too large. Max 5 MB per image.`, 'error');
+        return;
+      }
+    }
+    setUploading(true);
+    try {
+      const urls = await Promise.all(files.map(f => uploadToCloudinary(f)));
+      setFormData(d => ({ ...d, images: [...(d.images || []), ...urls] }));
+      showToast(`${urls.length} image${urls.length > 1 ? 's' : ''} uploaded!`);
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeGalleryImage = (index) => {
+    setFormData(d => ({ ...d, images: d.images.filter((_, i) => i !== index) }));
+  };
+
   // ── Form helpers ──
   const openCreate = () => {
     setEditingEvent(null);
@@ -150,6 +222,7 @@ export default function AdminPanel() {
       contactEmail: event.contactEmail || '',
       contactPhone: event.contactPhone || '',
       isFeatured: !!event.isFeatured,
+      images: event.images || [],
     });
     setFormErrors({});
     setView('form');
@@ -181,6 +254,8 @@ export default function AdminPanel() {
       errs.eventDate = 'Start date cannot be in the past for upcoming events';
     }
     if (!formData.venue.trim()) errs.venue = 'Venue is required';
+    if (!formData.category.trim()) errs.category = 'Category is required';
+    if (!formData.imageUrl.trim()) errs.imageUrl = 'Event image URL is required';
     if (!formData.eventType) errs.eventType = 'Event type is required';
     if (!formData.registrationStatus) {
       errs.registrationStatus = 'Registration status is required';
@@ -234,6 +309,7 @@ export default function AdminPanel() {
         contactEmail: formData.contactEmail?.trim() || null,
         contactPhone: formData.contactPhone ? formData.contactPhone.replace(/[\s\-]/g, '') : null,
         isFeatured: !!formData.isFeatured,
+        images: formData.images || [],
       };
 
       if (editingEvent) {
@@ -558,11 +634,12 @@ export default function AdminPanel() {
                   {formErrors.name && <span className="form-error">⚠ {formErrors.name}</span>}
                 </div>
                 <div className="form-group">
-                  <label htmlFor="admin-category" className="form-label">Category</label>
-                  <input id="admin-category" type="text" className="form-input"
+                  <label htmlFor="admin-category" className="form-label">Category <span className="req">*</span></label>
+                  <input id="admin-category" type="text" className={`form-input ${formErrors.category ? 'error' : ''}`}
                     placeholder="e.g. Exhibition, Workshop, Cultural"
                     value={formData.category}
                     onChange={e => setFormData(d => ({ ...d, category: e.target.value }))}/>
+                  {formErrors.category && <span className="form-error">âš  {formErrors.category}</span>}
                 </div>
               </div>
 
@@ -728,22 +805,88 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* Row 7: Image URLs */}
+              {/* Row 7: Image Upload */}
               <div className="admin-form__row admin-form__row--2">
+                {/* Event Image */}
                 <div className="form-group">
-                  <label htmlFor="admin-image-url" className="form-label">Image URL</label>
-                  <input id="admin-image-url" type="url" className="form-input"
-                    placeholder="https://…/image.jpg"
-                    value={formData.imageUrl}
-                    onChange={e => setFormData(d => ({ ...d, imageUrl: e.target.value }))}/>
+                  <label className="form-label">Event Image <span className="req">*</span></label>
+                  <input
+                    id="admin-image-upload"
+                    type="file"
+                    accept="image/*"
+                    className={formErrors.imageUrl ? 'error' : ''}
+                    style={{ display: 'block', width: '100%', padding: '0.4rem 0', cursor: 'pointer' }}
+                    disabled={uploading}
+                    onChange={e => handleImageUpload(e, 'imageUrl')}
+                  />
+                  {uploading && <p style={{ fontSize: '0.8rem', color: 'var(--color-primary)', marginTop: '0.3rem' }}>Uploading image…</p>}
+                  {formData.imageUrl && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <img src={formData.imageUrl} alt="Event preview" style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--color-border)' }} />
+                      <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: '0.3rem', fontSize: '0.75rem' }}
+                        onClick={() => setFormData(d => ({ ...d, imageUrl: '' }))}>Remove image</button>
+                    </div>
+                  )}
+                  {formErrors.imageUrl && <span className="form-error">⚠ {formErrors.imageUrl}</span>}
                 </div>
+                {/* Banner Image */}
                 <div className="form-group">
-                  <label htmlFor="admin-banner-url" className="form-label">Banner URL</label>
-                  <input id="admin-banner-url" type="url" className="form-input"
-                    placeholder="https://…/banner.jpg"
-                    value={formData.bannerUrl}
-                    onChange={e => setFormData(d => ({ ...d, bannerUrl: e.target.value }))}/>
+                  <label className="form-label">Banner Image <span className="note">(optional, hero/top banner)</span></label>
+                  <input
+                    id="admin-banner-upload"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'block', width: '100%', padding: '0.4rem 0', cursor: 'pointer' }}
+                    disabled={uploading}
+                    onChange={e => handleImageUpload(e, 'bannerUrl')}
+                  />
+                  {formData.bannerUrl && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <img src={formData.bannerUrl} alt="Banner preview" style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--color-border)' }} />
+                      <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: '0.3rem', fontSize: '0.75rem' }}
+                        onClick={() => setFormData(d => ({ ...d, bannerUrl: '' }))}>Remove banner</button>
+                    </div>
+                  )}
                 </div>
+              </div>
+
+              
+              {/* Gallery Images */}
+              <div className="form-group">
+                <label className="form-label">
+                  Gallery Images <span className="note">(optional — upload multiple, shown in event detail page)</span>
+                </label>
+                <input
+                  id="admin-gallery-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'block', width: '100%', padding: '0.4rem 0', cursor: 'pointer' }}
+                  disabled={uploading}
+                  onChange={handleGalleryUpload}
+                />
+                {uploading && <p style={{ fontSize: '0.8rem', color: 'var(--color-primary)', marginTop: '0.3rem' }}>Uploading…</p>}
+                {formData.images && formData.images.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.5rem', marginTop: '0.75rem' }}>
+                    {formData.images.map((url, idx) => (
+                      <div key={idx} style={{ position: 'relative' }}>
+                        <img
+                          src={url}
+                          alt={`Gallery ${idx + 1}`}
+                          style={{ width: '100%', height: '90px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--color-border)' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryImage(idx)}
+                          style={{ position: 'absolute', top: '3px', right: '3px', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', fontSize: '12px', lineHeight: '20px', textAlign: 'center' }}
+                          title="Remove image"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Highlights */}
@@ -786,16 +929,16 @@ export default function AdminPanel() {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={saving}
+                  disabled={saving || uploading}
                   id="admin-form-submit"
                 >
-                  {saving ? 'Saving…' : editingEvent ? 'Update Event' : 'Create Event'}
+                  {uploading ? 'Uploading image…' : saving ? 'Saving…' : editingEvent ? 'Update Event' : 'Create Event'}
                 </button>
                 <button
                   type="button"
                   className="btn btn-ghost"
                   onClick={() => setView('list')}
-                  disabled={saving}
+                  disabled={saving || uploading}
                   id="admin-form-cancel"
                 >
                   Cancel

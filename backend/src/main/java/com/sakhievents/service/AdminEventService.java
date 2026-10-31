@@ -6,6 +6,7 @@ import com.sakhievents.model.Event;
 import com.sakhievents.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ public class AdminEventService {
 
     // ── READ ──────────────────────────────────────────────────────────────
 
+    @Transactional(readOnly = true)
     public List<EventResponseDTO> getAllEvents() {
         return eventRepository.findAllOrderByCreatedAtDesc()
                 .stream()
@@ -36,6 +38,7 @@ public class AdminEventService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public EventResponseDTO getEventById(Long id) {
         Event event = findOrThrow(id);
         return EventResponseDTO.fromEntity(event);
@@ -49,6 +52,7 @@ public class AdminEventService {
      *  - endDate must be on or after eventDate (if provided)
      *  - registeredCount must not exceed maxCapacity (if both provided)
      */
+    @Transactional
     public EventResponseDTO createEvent(EventRequestDTO dto) {
         validateDates(dto);
         validateCapacity(dto);
@@ -66,6 +70,7 @@ public class AdminEventService {
      * Loads the existing event, applies all changes from the DTO, and saves.
      * Partial update is NOT supported via this endpoint — send full object.
      */
+    @Transactional
     public EventResponseDTO updateEvent(Long id, EventRequestDTO dto) {
         validateDates(dto);
         validateCapacity(dto);
@@ -118,6 +123,7 @@ public class AdminEventService {
         event.setRegistrationStatus(Event.RegistrationStatus.valueOf(dto.getRegistrationStatus()));
         event.setImageUrl(dto.getImageUrl());
         event.setBannerUrl(dto.getBannerUrl());
+        event.setImages(dto.getImages() != null ? dto.getImages() : new java.util.ArrayList<>());
         event.setMaxCapacity(dto.getMaxCapacity());
         event.setRegisteredCount(dto.getRegisteredCount() != null ? dto.getRegisteredCount() : 0);
         event.setHighlights(dto.getHighlights());

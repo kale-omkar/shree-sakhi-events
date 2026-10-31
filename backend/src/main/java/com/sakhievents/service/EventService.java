@@ -5,6 +5,7 @@ import com.sakhievents.model.Event;
 import com.sakhievents.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -18,6 +19,7 @@ public class EventService {
     @Autowired
     private EventRepository eventRepository;
 
+    @Transactional(readOnly = true)
     public List<EventResponseDTO> getAllEvents() {
         return eventRepository.findAll()
                 .stream()
@@ -25,6 +27,7 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Optional<EventResponseDTO> getEventById(Long id) {
         return eventRepository.findById(id)
                 .map(EventResponseDTO::fromEntity);
