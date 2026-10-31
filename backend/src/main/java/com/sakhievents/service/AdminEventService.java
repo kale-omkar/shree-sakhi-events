@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +29,9 @@ public class AdminEventService {
 
     @Autowired
     private com.sakhievents.repository.RegistrationRepository registrationRepository;
+
+    @Autowired
+    private CloudinaryAssetService cloudinaryAssetService;
 
     // ── READ ──────────────────────────────────────────────────────────────
 
@@ -54,6 +59,7 @@ public class AdminEventService {
      */
     @Transactional
     public EventResponseDTO createEvent(EventRequestDTO dto) {
+        validateImageUrl(dto);
         validateDates(dto);
         validateCapacity(dto);
         validateStatus(dto);
@@ -87,6 +93,13 @@ public class AdminEventService {
     @org.springframework.transaction.annotation.Transactional
     public void deleteEvent(Long id) {
         Event event = findOrThrow(id);
+        List<String> imageUrls = new ArrayList<>(new LinkedHashSet<>());
+        imageUrls.add(event.getImageUrl());
+        imageUrls.add(event.getBannerUrl());
+        if (event.getImages() != null) {
+            imageUrls.addAll(event.getImages());
+        }
+        cloudinaryAssetService.deleteAssets(imageUrls);
         registrationRepository.deleteByEventId(id);
         eventRepository.delete(event);
     }
@@ -159,6 +172,13 @@ public class AdminEventService {
                 throw new RuntimeException(
                     "Registered count (" + dto.getRegisteredCount() + ") cannot exceed maximum capacity (" + dto.getMaxCapacity() + ")");
             }
+        }
+    }
+
+    /** New events require an image; updates may retain legacy records without one. */
+    private void validateImageUrl(EventRequestDTO dto) {
+        if (dto.getImageUrl() == null || dto.getImageUrl().isBlank()) {
+            throw new RuntimeException("Event image URL is required");
         }
     }
 }

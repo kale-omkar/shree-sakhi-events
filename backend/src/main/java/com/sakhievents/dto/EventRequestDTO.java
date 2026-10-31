@@ -1,4 +1,4 @@
-﻿package com.sakhievents.dto;
+package com.sakhievents.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -8,7 +8,6 @@ import java.util.List;
 
 @Data
 public class EventRequestDTO {
-
     @NotBlank(message = "Event name is required")
     @Size(min = 3, max = 200, message = "Event name must be between 3 and 200 characters")
     private String name;
@@ -44,8 +43,7 @@ public class EventRequestDTO {
     @Pattern(regexp = "OPEN|CLOSED|COMING_SOON|NOT_REQUIRED", message = "Registration status must be one of: OPEN, CLOSED, COMING_SOON, NOT_REQUIRED")
     private String registrationStatus;
 
-    // imageUrl is required - event cards must always have an image
-    @NotBlank(message = "Event image URL is required")
+    // Required when creating an event; legacy events may be updated without an image.
     private String imageUrl;
 
     // bannerUrl is optional
