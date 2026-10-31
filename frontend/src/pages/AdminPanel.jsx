@@ -255,7 +255,7 @@ export default function AdminPanel() {
     }
     if (!formData.venue.trim()) errs.venue = 'Venue is required';
     if (!formData.category.trim()) errs.category = 'Category is required';
-    if (!formData.imageUrl.trim()) errs.imageUrl = 'Event image URL is required';
+    if (!editingEvent && !formData.imageUrl.trim()) errs.imageUrl = 'Event image URL is required';
     if (!formData.eventType) errs.eventType = 'Event type is required';
     if (!formData.registrationStatus) {
       errs.registrationStatus = 'Registration status is required';
