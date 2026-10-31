@@ -19,6 +19,7 @@ public class EventResponseDTO {
     private String registrationStatus;
     private String imageUrl;
     private String bannerUrl;
+    private List<String> images;
     private Integer maxCapacity;
     private Integer registeredCount;
     private Integer spotsLeft;
@@ -44,6 +45,7 @@ public class EventResponseDTO {
         dto.setRegistrationStatus(event.getRegistrationStatus().name());
         dto.setImageUrl(event.getImageUrl());
         dto.setBannerUrl(event.getBannerUrl());
+        dto.setImages(event.getImages() == null ? List.of() : List.copyOf(event.getImages()));
         dto.setMaxCapacity(event.getMaxCapacity());
         dto.setRegisteredCount(event.getRegisteredCount());
         dto.setHighlights(event.getHighlights());
