@@ -53,17 +53,6 @@
   opacity: 0.95;
 }
 
-.event-detail__hero-ambient {
-  position: absolute;
-  inset: -30px;
-  background-size: cover;
-  background-position: center;
-  filter: blur(50px);
-  opacity: 0.22;
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
-
 .event-detail__hero-overlay {
   position: absolute;
   inset: 0;

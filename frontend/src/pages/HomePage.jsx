@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { eventsApi } from '../api/eventsApi';
 import { COMPANY_INFO } from '../constants/companyInfo';
 import EventCard from '../components/EventCard';
+import GallerySection from '../components/GallerySection';
 import './HomePage.css';
 
 export default function HomePage() {
@@ -119,6 +120,37 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── GLIMPSES OF OUR EVENTS ── */}
+      <section className="home-section glimpses-section" aria-labelledby="glimpses-heading">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-label">Memorable Moments</span>
+            <h2 id="glimpses-heading">
+              Glimpses of <span className="text-gradient">Our Events</span>
+            </h2>
+            <p>Celebrating entrepreneurship, teamwork and memorable moments at Shree Sakhi Events.</p>
+          </div>
+          <div className="glimpses-grid">
+            <figure className="glimpses-item">
+              <img
+                src="/images/event-team-1.png"
+                alt="Women entrepreneurs and team at a Shree Sakhi Events exhibition"
+                className="glimpses-img"
+                loading="lazy"
+              />
+            </figure>
+            <figure className="glimpses-item">
+              <img
+                src="/images/event-team-2.png"
+                alt="Exhibition stalls and attendees at a Shree Sakhi Events grand exhibition"
+                className="glimpses-img"
+                loading="lazy"
+              />
+            </figure>
+          </div>
+        </div>
+      </section>
+
       {/* ── FEATURED EXHIBITIONS & EVENTS ── */}
       <section className="home-section featured-section" aria-labelledby="featured-heading">
         <div className="container">
@@ -228,6 +260,9 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ── OUR GALLERY (REAL EXHIBITION MOMENTS) ── */}
+      <GallerySection />
 
       {/* ── DOCUMENTED PLATFORM HIGHLIGHTS ── */}
       <section className="home-section why-section" aria-labelledby="why-heading">
