@@ -127,6 +127,7 @@
 .events-grid {
   display: grid;
   gap: var(--space-xl);
+  align-items: start;
 }
 .events-grid--3 { grid-template-columns: repeat(3, 1fr); }
 .events-grid--2 { grid-template-columns: repeat(2, 1fr); }

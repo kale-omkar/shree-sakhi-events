@@ -113,6 +113,7 @@ class AdminEventControllerTest {
         dto.setVenue("Sample Venue");
         dto.setEventType("UPCOMING");
         dto.setRegistrationStatus("OPEN");
+        dto.setCategory("Exhibition");
 
         mockMvc.perform(post("/api/admin/events")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @SpringBootApplication
 public class SakhiEventsApplication {
@@ -21,18 +22,24 @@ public class SakhiEventsApplication {
 
     private static void loadEnvFile() {
         String[] candidatePaths = {
-            ".env",
             "backend/.env",
+            ".env",
+            "../backend/.env",
             "../.env",
             "../../.env"
         };
 
+        boolean anyLoaded = false;
         for (String path : candidatePaths) {
             File envFile = new File(path);
             if (envFile.exists() && envFile.isFile()) {
-                try (BufferedReader reader = new BufferedReader(new FileReader(envFile))) {
+                try (BufferedReader reader = new BufferedReader(new FileReader(envFile, StandardCharsets.UTF_8))) {
                     String line;
+                    boolean fileHadEntries = false;
                     while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("\uFEFF")) {
+                            line = line.substring(1);
+                        }
                         line = line.trim();
                         if (line.isEmpty() || line.startsWith("#")) {
                             continue;
@@ -45,22 +52,47 @@ public class SakhiEventsApplication {
                                 (value.startsWith("'") && value.endsWith("'"))) {
                                 value = value.substring(1, value.length() - 1);
                             }
-                            if (System.getProperty(key) == null) {
+
+                            boolean isPlaceholder = value.startsWith("YOUR_") ||
+                                                    "CLOUDINARY_API_SECRET".equalsIgnoreCase(value) ||
+                                                    "your_admin_key_here".equalsIgnoreCase(value) ||
+                                                    "your_mysql_password_here".equalsIgnoreCase(value);
+
+                            if (!isPlaceholder || System.getProperty(key) == null) {
                                 System.setProperty(key, value);
-                            }
-                            if ("ADMIN_API_KEY".equalsIgnoreCase(key) && System.getProperty("admin.api.key") == null) {
-                                System.setProperty("admin.api.key", value);
-                            } else if ("admin.api.key".equalsIgnoreCase(key) && System.getProperty("ADMIN_API_KEY") == null) {
-                                System.setProperty("ADMIN_API_KEY", value);
+                                fileHadEntries = true;
+
+                                if ("ADMIN_API_KEY".equalsIgnoreCase(key)) {
+                                    System.setProperty("admin.api.key", value);
+                                } else if ("CLOUDINARY_CLOUD_NAME".equalsIgnoreCase(key)) {
+                                    System.setProperty("cloudinary.cloud-name", value);
+                                } else if ("CLOUDINARY_API_KEY".equalsIgnoreCase(key)) {
+                                    System.setProperty("cloudinary.api-key", value);
+                                } else if ("CLOUDINARY_API_SECRET".equalsIgnoreCase(key)) {
+                                    System.setProperty("cloudinary.api-secret", value);
+                                } else if ("DB_URL".equalsIgnoreCase(key)) {
+                                    System.setProperty("spring.datasource.url", value);
+                                } else if ("DB_USERNAME".equalsIgnoreCase(key)) {
+                                    System.setProperty("spring.datasource.username", value);
+                                } else if ("DB_PASSWORD".equalsIgnoreCase(key)) {
+                                    System.setProperty("spring.datasource.password", value);
+                                } else if ("SERVER_PORT".equalsIgnoreCase(key)) {
+                                    System.setProperty("server.port", value);
+                                }
                             }
                         }
                     }
-                    System.out.println(">>> Loaded environment from: " + envFile.getAbsolutePath());
-                    return;
+                    if (fileHadEntries) {
+                        System.out.println(">>> Loaded environment from: " + envFile.getAbsolutePath());
+                        anyLoaded = true;
+                    }
                 } catch (IOException e) {
                     System.err.println("Warning: Failed to read .env file at " + path + ": " + e.getMessage());
                 }
             }
+        }
+        if (!anyLoaded) {
+            System.out.println(">>> No .env file found in candidate paths. Falling back to system environment / application.properties.");
         }
     }
 

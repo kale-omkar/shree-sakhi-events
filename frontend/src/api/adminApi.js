@@ -1,14 +1,17 @@
-// Protected requests include the X-Admin-Key header dynamically from session storage or environment.
+// Protected requests include the X-Admin-Key header dynamically from session storage.
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 export const getAdminHeaders = (keyOverride) => {
-  const key = keyOverride || sessionStorage.getItem('admin_api_key') || import.meta.env.VITE_ADMIN_KEY || '';
+  const key = (keyOverride !== undefined && keyOverride !== null)
+    ? keyOverride
+    : (sessionStorage.getItem('admin_api_key') || '');
   const headers = {
     'Content-Type': 'application/json',
   };
-  if (key) {
-    headers['X-Admin-Key'] = key;
+  const trimmed = typeof key === 'string' ? key.trim() : '';
+  if (trimmed) {
+    headers['X-Admin-Key'] = trimmed;
   }
   return headers;
 };
@@ -16,8 +19,20 @@ export const getAdminHeaders = (keyOverride) => {
 export const adminHeaders = {
   get 'Content-Type'() { return 'application/json'; },
   get 'X-Admin-Key'() {
-    return sessionStorage.getItem('admin_api_key') || import.meta.env.VITE_ADMIN_KEY || '';
+    const key = sessionStorage.getItem('admin_api_key') || '';
+    return key.trim();
   },
+};
+
+const safeFetch = async (url, options = {}) => {
+  try {
+    return await fetch(url, options);
+  } catch (err) {
+    if (err.name === 'TypeError' || err.message?.includes('fetch')) {
+      throw new Error(`Network error: Unable to connect to backend server at ${BASE_URL}. Please ensure the Spring Boot backend is running.`);
+    }
+    throw err;
+  }
 };
 
 const handleResponse = async (res) => {
@@ -49,53 +64,53 @@ const handleResponse = async (res) => {
 export const adminEventsApi = {
   /** GET /api/admin/events — list all events (newest first). Optional keyOverride for auth check */
   getAll: (keyOverride) =>
-    fetch(`${BASE_URL}/admin/events`, { headers: getAdminHeaders(keyOverride) })
+    safeFetch(`${BASE_URL}/admin/events`, { headers: getAdminHeaders(keyOverride) })
       .then(handleResponse),
 
   /** GET /api/admin/events/:id */
   getById: (id) =>
-    fetch(`${BASE_URL}/admin/events/${id}`, { headers: adminHeaders })
+    safeFetch(`${BASE_URL}/admin/events/${id}`, { headers: getAdminHeaders() })
       .then(handleResponse),
 
   /** POST /api/admin/events — create a new event */
   create: (eventData) =>
-    fetch(`${BASE_URL}/admin/events`, {
+    safeFetch(`${BASE_URL}/admin/events`, {
       method: 'POST',
-      headers: adminHeaders,
+      headers: getAdminHeaders(),
       body: JSON.stringify(eventData),
     }).then(handleResponse),
 
   /** PUT /api/admin/events/:id — update an existing event */
   update: (id, eventData) =>
-    fetch(`${BASE_URL}/admin/events/${id}`, {
+    safeFetch(`${BASE_URL}/admin/events/${id}`, {
       method: 'PUT',
-      headers: adminHeaders,
+      headers: getAdminHeaders(),
       body: JSON.stringify(eventData),
     }).then(handleResponse),
 
   /** DELETE /api/admin/events/:id — delete an event */
   delete: (id) =>
-    fetch(`${BASE_URL}/admin/events/${id}`, {
+    safeFetch(`${BASE_URL}/admin/events/${id}`, {
       method: 'DELETE',
-      headers: adminHeaders,
+      headers: getAdminHeaders(),
     }).then(handleResponse),
 
   /** PATCH /api/admin/events/:id/toggle-featured */
   toggleFeatured: (id) =>
-    fetch(`${BASE_URL}/admin/events/${id}/toggle-featured`, {
+    safeFetch(`${BASE_URL}/admin/events/${id}/toggle-featured`, {
       method: 'PATCH',
-      headers: adminHeaders,
+      headers: getAdminHeaders(),
     }).then(handleResponse),
 };
 
 export const adminEnquiriesApi = {
   /** GET /api/enquiries — list all enquiries (newest first). Optional keyOverride for auth check */
   getAll: (keyOverride) =>
-    fetch(`${BASE_URL}/enquiries`, { headers: getAdminHeaders(keyOverride) })
+    safeFetch(`${BASE_URL}/enquiries`, { headers: getAdminHeaders(keyOverride) })
       .then(handleResponse),
 
   /** GET /api/enquiries/:id — get enquiry by ID */
   getById: (id) =>
-    fetch(`${BASE_URL}/enquiries/${id}`, { headers: adminHeaders })
+    safeFetch(`${BASE_URL}/enquiries/${id}`, { headers: getAdminHeaders() })
       .then(handleResponse),
 };
