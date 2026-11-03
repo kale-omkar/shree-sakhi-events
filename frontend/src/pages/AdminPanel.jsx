@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { adminEventsApi } from '../api/adminApi';
 import AdminBookingsSection from '../components/AdminBookingsSection';
 import AdminEnquiriesSection from '../components/AdminEnquiriesSection';
@@ -41,7 +41,7 @@ export default function AdminPanel() {
   // ── Auth state ──
   const [authed, setAuthed]   = useState(() => {
     return sessionStorage.getItem('admin_authed') === 'true' &&
-      Boolean(sessionStorage.getItem('admin_api_key') || import.meta.env.VITE_ADMIN_KEY);
+      Boolean(sessionStorage.getItem('admin_api_key'));
   });
   const [loginKey, setLoginKey] = useState('');
   const [loginErr, setLoginErr] = useState('');
@@ -127,16 +127,32 @@ export default function AdminPanel() {
   const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
   const uploadToCloudinary = async (file) => {
+    if (!CLOUD_NAME) {
+      throw new Error('Cloudinary cloud name is not configured (missing VITE_CLOUDINARY_CLOUD_NAME).');
+    }
+    if (!UPLOAD_PRESET) {
+      throw new Error('Cloudinary upload preset is not configured (missing VITE_CLOUDINARY_UPLOAD_PRESET).');
+    }
     const data = new FormData();
     data.append('file', file);
     data.append('upload_preset', UPLOAD_PRESET);
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-      { method: 'POST', body: data }
-    );
-    if (!res.ok) throw new Error('Image upload failed. Check your Cloudinary upload preset.');
-    const json = await res.json();
-    return json.secure_url;
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        { method: 'POST', body: data }
+      );
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const errorMsg = json?.error?.message || `Cloudinary upload failed (HTTP ${res.status}). Check upload preset settings.`;
+        throw new Error(errorMsg);
+      }
+      return json.secure_url;
+    } catch (err) {
+      if (err.name === 'TypeError' || err.message?.includes('fetch')) {
+        throw new Error('Network error: Unable to connect to Cloudinary. Please check your internet connection.');
+      }
+      throw err;
+    }
   };
 
   const handleImageUpload = async (e, field) => {
@@ -822,7 +838,7 @@ export default function AdminPanel() {
                   {uploading && <p style={{ fontSize: '0.8rem', color: 'var(--color-primary)', marginTop: '0.3rem' }}>Uploading image…</p>}
                   {formData.imageUrl && (
                     <div style={{ marginTop: '0.5rem' }}>
-                      <img src={formData.imageUrl} alt="Event preview" style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--color-border)' }} />
+                      <img src={formData.imageUrl} alt="Event preview" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'unset', borderRadius: '8px', border: '1px solid var(--color-border)' }} />
                       <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: '0.3rem', fontSize: '0.75rem' }}
                         onClick={() => setFormData(d => ({ ...d, imageUrl: '' }))}>Remove image</button>
                     </div>
@@ -842,7 +858,7 @@ export default function AdminPanel() {
                   />
                   {formData.bannerUrl && (
                     <div style={{ marginTop: '0.5rem' }}>
-                      <img src={formData.bannerUrl} alt="Banner preview" style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--color-border)' }} />
+                      <img src={formData.bannerUrl} alt="Banner preview" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'unset', borderRadius: '8px', border: '1px solid var(--color-border)' }} />
                       <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: '0.3rem', fontSize: '0.75rem' }}
                         onClick={() => setFormData(d => ({ ...d, bannerUrl: '' }))}>Remove banner</button>
                     </div>

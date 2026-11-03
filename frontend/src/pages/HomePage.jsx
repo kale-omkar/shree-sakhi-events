@@ -9,8 +9,9 @@ import './HomePage.css';
 export default function HomePage() {
   const [featuredEvents, setFeaturedEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [loading, setLoading]               = useState(true);
-  const [error, setError]                   = useState(null);
+  const [heroEvent, setHeroEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const primaryWhatsApp = COMPANY_INFO.whatsappNumbers[0];
 
@@ -29,10 +30,16 @@ export default function HomePage() {
       .then(([featured, upcoming]) => {
         if (!isMounted) return;
         setFeaturedEvents(Array.isArray(featured) ? featured : []);
-        const unfeatured = Array.isArray(upcoming)
-          ? upcoming.filter(e => !featured.some(f => f.id === e.id)).slice(0, 3)
-          : [];
+        const upcomingArr = Array.isArray(upcoming) ? upcoming : [];
+        const unfeatured = upcomingArr
+          .filter(e => !featured.some(f => f.id === e.id)).slice(0, 3);
         setUpcomingEvents(unfeatured);
+
+        // Find nearest upcoming event with a valid uploaded poster image
+        const validUpcomingWithPoster = upcomingArr
+          .filter(e => e && e.imageUrl && typeof e.imageUrl === 'string' && e.imageUrl.trim() !== '')
+          .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+        setHeroEvent(validUpcomingWithPoster[0] || null);
       })
       .catch(err => {
         if (!isMounted) return;
@@ -110,12 +117,56 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="hero__logo-card animate-float" aria-hidden="true">
-            <img
-              src="/shree-sakhi-logo.png"
-              alt="Shree Sakhi Events Official Logo"
-              className="hero__logo-visual"
-            />
+          <div className="hero__logo-card hero__poster-card animate-float" aria-hidden={heroEvent && heroEvent.imageUrl ? "false" : "true"}>
+            {heroEvent && heroEvent.imageUrl ? (
+              <Link to={`/events/${heroEvent.id}`} className="hero__poster-link" aria-label={`View details for ${heroEvent.name}`}>
+                <div className="hero__poster-badge">
+                  <span className="badge-dot" aria-hidden="true"></span>
+                  Upcoming Exhibition
+                </div>
+                <div className="hero__poster-frame">
+                  <img
+                    src={heroEvent.imageUrl}
+                    alt={heroEvent.name ? `${heroEvent.name} poster` : 'Upcoming event poster'}
+                    className="hero__poster-visual"
+                    loading="eager"
+                  />
+                </div>
+                <div className="hero__poster-meta">
+                  <h3 className="hero__poster-title">{heroEvent.name}</h3>
+                  <div className="hero__poster-meta-footer">
+                    {heroEvent.eventDate && (
+                      <span className="hero__poster-date">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        {new Date(heroEvent.eventDate).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    )}
+                    <span className="hero__poster-cta">
+                      View Details
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="hero__poster-placeholder">
+                <span className="hero__placeholder-badge">Next Grand Exhibition</span>
+                <h3 className="hero__placeholder-title">Exciting Events Coming Soon</h3>
+                <p className="hero__placeholder-text">Stay tuned as we announce our next grand exhibition dates, vendor stalls and highlights.</p>
+                <Link to="/events" className="btn btn-primary btn-sm">Explore All Exhibitions</Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
