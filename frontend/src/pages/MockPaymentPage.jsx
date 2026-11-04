@@ -62,7 +62,14 @@ export default function MockPaymentPage() {
       const confirmed = await bookingApi.confirmPayment(booking.bookingRef, ref, 'mock');
 
       // Step 3: Navigate to confirmation page
-      navigate('/book/confirm', { state: { booking: confirmed, message: 'Payment successful! Your booking is confirmed.' } });
+      navigate('/book/confirm', {
+        state: {
+          booking: confirmed,
+          message: 'Payment successful! Your booking is confirmed.',
+          stallCodes: confirmed.stallCodes || [],
+          bookedStalls: confirmed.bookedStalls || [],
+        },
+      });
 
     } catch (err) {
       setError(err.message || 'Payment failed. Please try again.');
@@ -102,8 +109,16 @@ export default function MockPaymentPage() {
             <span className="payment-field__value">{booking.eventName}</span>
           </div>
           <div className="payment-field">
-            <span className="payment-field__label">Booking Type</span>
+            <span className="payment-field__label">Booker Type</span>
             <span className="payment-field__value">{booking.bookerType}</span>
+          </div>
+          <div className="payment-field">
+            <span className="payment-field__label">Stall(s)</span>
+            <span className="payment-field__value" style={{ fontSize: '0.85rem' }}>
+              {booking.bookedStalls && booking.bookedStalls.length > 0
+                ? booking.bookedStalls.map(s => `${s.stallCode} (${s.sizeLabel || 'size pending'})`).join(', ')
+                : (booking.stallCodes && booking.stallCodes.length > 0 ? booking.stallCodes.join(', ') : '—')}
+            </span>
           </div>
           <div className="payment-field">
             <span className="payment-field__label">Name</span>
@@ -112,7 +127,9 @@ export default function MockPaymentPage() {
           <div className="payment-field">
             <span className="payment-field__label">Amount</span>
             <span className="payment-field__value" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
-              {booking.amount ? `₹${booking.amount}` : 'Pending confirmation'}
+              {booking.amount != null && Number(booking.amount) > 0
+                ? `₹${Number(booking.amount).toLocaleString('en-IN')}`
+                : 'Pending confirmation'}
             </span>
           </div>
 

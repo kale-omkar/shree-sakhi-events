@@ -5,6 +5,7 @@ import com.sakhievents.dto.BookingResponseDTO;
 import com.sakhievents.dto.BookingStatusUpdateDTO;
 import com.sakhievents.model.Booking;
 import com.sakhievents.model.Event;
+import com.sakhievents.model.stall.Stall;
 import com.sakhievents.payment.MockPaymentService;
 import com.sakhievents.repository.BookingRepository;
 import com.sakhievents.repository.EventRepository;
@@ -38,6 +39,15 @@ class BookingServiceTest {
     @Mock
     private MockPaymentService paymentService;
 
+    @Mock
+    private com.sakhievents.service.stall.StallService stallService;
+
+    @Mock
+    private com.sakhievents.repository.stall.StallRepository stallRepository;
+
+    @Mock
+    private com.sakhievents.repository.booking.BookingStallRepository bookingStallRepository;
+
     @InjectMocks
     private BookingService bookingService;
 
@@ -46,6 +56,9 @@ class BookingServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(bookingService, "paymentService", paymentService);
+        ReflectionTestUtils.setField(bookingService, "stallService", stallService);
+        ReflectionTestUtils.setField(bookingService, "stallRepository", stallRepository);
+        ReflectionTestUtils.setField(bookingService, "bookingStallRepository", bookingStallRepository);
 
         upcomingEvent = new Event();
         upcomingEvent.setId(1L);
@@ -57,11 +70,11 @@ class BookingServiceTest {
     }
 
     @Test
-    @DisplayName("Should create booking successfully for upcoming event")
+    @DisplayName("Should create booking successfully for upcoming event (visitor, no stalls)")
     void testCreateBookingSuccess() {
         BookingRequestDTO request = new BookingRequestDTO();
         request.setEventId(1L);
-        request.setBookerType(Booking.BookerType.EXHIBITOR);
+        request.setBookerType(Booking.BookerType.VISITOR);
         request.setFullName("Priya Sharma");
         request.setCompany("Priya Handicrafts");
         request.setPhone("9876543210");
@@ -83,11 +96,80 @@ class BookingServiceTest {
 
         assertNotNull(response);
         assertEquals("Priya Sharma", response.getFullName());
-        assertEquals("EXHIBITOR", response.getBookerType());
+        assertEquals("VISITOR", response.getBookerType());
         assertNotNull(response.getBookingRef());
         assertTrue(response.getBookingRef().startsWith("SSE-"));
         assertEquals("PENDING", response.getBookingStatus());
         verify(bookingRepository, times(1)).save(any(Booking.class));
+    }
+
+    @Test
+    @DisplayName("Should create exhibitor booking with stalls, backend-computed total, and consume hold")
+    void testCreateBookingExhibitorWithStalls() {
+        BookingRequestDTO request = new BookingRequestDTO();
+        request.setEventId(1L);
+        request.setBookerType(Booking.BookerType.EXHIBITOR);
+        request.setFullName("Priya Sharma");
+        request.setCompany("Priya Handicrafts");
+        request.setPhone("9876543210");
+        request.setEmail("priya@example.com");
+        request.setQuantity(1);
+        request.setStallCodes(java.util.List.of("12"));
+        request.setHoldToken("tok-abc");
+        request.setSessionId("sess-xyz");
+        request.setConsent(true);
+
+        Stall stall12 = new Stall();
+        stall12.setId(7L);
+        stall12.setStallCode("12");
+        stall12.setPrice(new BigDecimal("4000.00"));
+
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(upcomingEvent));
+        when(bookingRepository.existsByEventIdAndEmailIgnoreCase(1L, "priya@example.com")).thenReturn(false);
+        when(bookingRepository.countAll()).thenReturn(4L);
+        when(stallService.validateAndConsumeHold(
+                eq(1L), eq(java.util.List.of("12")), eq("tok-abc"), eq("sess-xyz")))
+                .thenReturn(new BigDecimal("4000.00"));
+        when(stallRepository.findByEventIdAndStallCode(1L, "12")).thenReturn(java.util.Optional.of(stall12));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking b = invocation.getArgument(0);
+            b.setId(100L);
+            return b;
+        });
+        when(bookingStallRepository.save(any(com.sakhievents.model.booking.BookingStall.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        BookingResponseDTO response = bookingService.createBooking(request);
+
+        assertNotNull(response);
+        assertEquals("EXHIBITOR", response.getBookerType());
+        assertEquals(new BigDecimal("4000.00"), response.getAmount());
+        assertEquals(java.util.List.of("12"), response.getStallCodes());
+        assertEquals(1, response.getBookedStalls().size());
+        verify(stallService).validateAndConsumeHold(
+                eq(1L), eq(java.util.List.of("12")), eq("tok-abc"), eq("sess-xyz"));
+        verify(bookingStallRepository, times(1)).save(any(com.sakhievents.model.booking.BookingStall.class));
+    }
+
+    @Test
+    @DisplayName("Should reject exhibitor booking when no stall selected")
+    void testCreateBookingExhibitorNoStallsRejected() {
+        BookingRequestDTO request = new BookingRequestDTO();
+        request.setEventId(1L);
+        request.setBookerType(Booking.BookerType.EXHIBITOR);
+        request.setFullName("Priya Sharma");
+        request.setPhone("9876543210");
+        request.setEmail("priya@example.com");
+        request.setQuantity(1);
+        request.setStallCodes(java.util.List.of());
+        request.setConsent(true);
+
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(upcomingEvent));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
+            bookingService.createBooking(request);
+        });
+        assertTrue(ex.getMessage().contains("At least one stall must be selected"));
     }
 
     @Test

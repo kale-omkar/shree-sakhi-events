@@ -10,35 +10,42 @@
 ```mermaid
 flowchart TD
     A([Visitor / Exhibitor / Sponsor]) --> B[Browse Upcoming Events]
-    B --> C[Click 'Book Stall / Register' /book?eventId=X]
-    C --> D{Client-side Validation}
-    D -- Invalid --> E[Show Inline Validation Errors]
-    E --> C
-    D -- Valid --> F[POST /api/bookings]
-    F --> G{Backend Validation}
-    G -- Event Past / Closed / Duplicate --> H[Return JSON Error 400]
-    H --> C
-    G -- Valid --> I[Generate Unique Ref SSE-YYYY-XXXX<br/>Status: PENDING]
-    I --> J{Payment Required / Configured?}
-    J -- Mock Mode --> K[Mock Payment Screen /book/pay]
-    K --> L[POST /api/bookings/{ref}/confirm-payment]
-    L --> M{Backend Signature Verification}
-    M -- Invalid Signature --> N[Mark FAILED<br/>Reject Confirmation]
-    M -- Valid Mock Signature --> O[Mark PAID<br/>Booking CONFIRMED]
-    J -- No Payment --> P[Booking PENDING<br/>Payment NOT_REQUIRED]
-    O --> Q[Booking Confirmation Screen /book/confirm]
-    P --> Q
-    Q --> R[Print Pass / Share WhatsApp]
+    B --> C[Click 'Book' /book?eventId=X]
+    C --> D[Step 1: Select Event & Booker Type]
+    D --> E{Booker Type}
+    E -- Visitor --> F[Step 3: Enter Details  /book/details]
+    E -- Exhibitor / Sponsor --> G[Step 2: Select Stalls  /book/stalls]
+    G --> H[Interactive Floor-Plan Map<br/>Click stall → toggle selection]
+    H --> I[Sticky Summary: selected stalls, subtotal, grand total]
+    I --> J[Click 'Hold Selected Stalls']
+    J --> K[POST /api/stalls/hold<br/>Server locks stall rows, TTL default 10 min]
+    K -- 409 Conflict --> L[Show 'Stall just got booked / held by another user'<br/>Refresh map, re-select]
+    K -- Success --> M[Hold active + countdown timer<br/>Click 'Continue to Details']
+    M --> F
+    F --> N[Step 3: Enter Personal Details  /book/details]
+    N --> O[POST /api/bookings<br/>stallCodes + holdToken + sessionId]
+    O --> P{Backend re-validates hold inside transaction<br/>locks stall rows, computes total from DB prices}
+    P -- Invalid / expired hold --> Q[Return 409 error<br/>Re-select stalls]
+    Q --> G
+    P -- Valid --> R[Save booking + booking_stalls links<br/>Amount = backend-computed stall total<br/>Status: PENDING]
+    R --> S[Step 4: Mock/Sandbox Payment  /book/pay]
+    S --> T[POST /api/bookings/{ref}/confirm-payment<br/>Backend signature verification]
+    T -- Invalid Signature --> U[Mark FAILED<br/>Reject confirmation]
+    T -- Valid --> V[Mark PAID + CONFIRMED]
+    V --> W[Step 5: Confirmation Screen  /book/confirm<br/>Shows booked stalls + total]
+    W --> X[Print Pass / Share WhatsApp]
     
-    S([Public User]) --> T[Check Status Screen /book/status]
-    T --> U[Enter Ref + Matching Email]
-    U --> V[GET /api/bookings/status?ref=...&email=...]
-    V --> W[Display Verified Booking Details]
+    Y([Public User]) --> Z[Check Status Screen /book/status]
+    Z --> AA[Enter Ref + Matching Email]
+    AA --> AB[GET /api/bookings/status?ref=...&email=...]
+    AB --> AC[Display Verified Booking Details + Stalls]
 
-    X([Admin]) --> Y[Admin Login Screen /admin]
-    Y --> Z[Admin Panel: 'Bookings & Stalls' Tab]
-    Z --> AA[Filter by Event, Status, Search]
-    AA --> AB[Confirm or Cancel Booking<br/>PATCH /api/admin/bookings/{id}]
+    AD([Admin]) --> AE[Admin Login Screen /admin]
+    AE --> AF[Admin Panel: 'Bookings & Stalls' Tab]
+    AF --> AG[Filter by Event, Status, Search]
+    AG --> AH[Stall Occupancy List per Event<br/>GET /api/admin/events/{id}/stalls-occupancy]
+    AH --> AI[Confirm or Cancel Booking<br/>PATCH /api/admin/bookings/{id}]
+    AI -- Cancel --> AJ[Booking cancelled → its stalls released<br/>become AVAILABLE again]
 ```
 
 ---
@@ -55,6 +62,11 @@ DB_URL=jdbc:mysql://localhost:3306/sakhi_events_db?createDatabaseIfNotExist=true
 DB_USERNAME=root
 DB_PASSWORD=your_password
 admin.api.key=sakhi-admin-2026
+
+# Stall Selection (new) — configurable
+stall.hold.ttl.minutes=10        # How long a stall hold lasts (default 10)
+stall.max.per.booking=5          # Max stalls one booking can hold (default 5)
+stall.cleanup.fixedDelay.ms=60000 # How often expired holds are swept (ms)
 
 # Jatin Patil — Booking Module Settings
 payment.mode=mock                # 'mock' (default test mode) or 'sandbox' (Razorpay test keys)
@@ -106,7 +118,18 @@ VITE_ADMIN_KEY=sakhi-admin-2026
 | **TC-11** | Admin status change (Confirm/Cancel) | On `/admin` Bookings tab, click `✓ Confirm` or `✕ Cancel` on a booking | Booking status patched via `PATCH /api/admin/bookings/{id}`, table updates in real-time. | Status updated to `CONFIRMED` / `CANCELLED` immediately. | **PASS** |
 | **TC-12** | Mock payment success flow | On `/book/pay`, click "Pay with Mock / Sandbox Gateway" | Calls backend `initiate-payment` and `confirm-payment`. Signature verified on backend. Booking marked `CONFIRMED` and `PAID`. | Navigates to `/book/confirm` with green success banner and transaction ref. | **PASS** |
 | **TC-13** | Tampered payment verification | Send `POST /api/bookings/{ref}/confirm-payment` with fraudulent signature | Backend rejects signature, sets `paymentStatus=FAILED`, returns verification failure error. | Tampered signature rejected; booking is never marked as paid. | **PASS** |
-| **TC-14** | Automated backend tests | Run `./mvnw test` in `backend/` directory | All 14 tests in `BookingServiceTest` and `BookingControllerTest` pass. | **14 / 14 tests pass (0 failures, 0 errors).** | **PASS** |
+| **TC-14** | Automated backend tests | Run `./mvnw test` in `backend/` directory | All 61 tests across `BookingServiceTest`, `BookingControllerTest`, `StallServiceTest`, `StallControllerTest` pass. | **61 / 61 tests pass (0 failures, 0 errors).** | **PASS** |
+| **TC-15** | Stall map loads with live status | Open `/book/stalls` for an upcoming event | Floor plan renders all stalls as `AVAILABLE`/`HELD`/`BOOKED`; entry/exit/stage/stairs/ORG drawn as non-selectable blocks; legend present. | Map loads; every stall shows type, size, price and status. | **PASS** |
+| **TC-16** | Select / deselect stalls | Click an available stall on the map, then click again | Stall toggles between selected (gold) and available; sticky summary updates count + grand total. | Selection state toggles correctly; summary reflects current selection. | **PASS** |
+| **TC-17** | Max stall limit enforced | Try to select 6 stalls (limit = 5) | 'Hold Selected Stalls' disabled / error: "Maximum 5 stalls can be selected per booking." | 6th selection blocked; limit message shown. | **PASS** |
+| **TC-18** | Price total from backend | Select 2 Regular stalls (₹4000 each) and hold | Grand total = ₹8000 computed by backend from DB prices, not frontend input. | Total = ₹8000; matches backend-computed value. | **PASS** |
+| **TC-19** | Hold expiry returns to map | Hold stalls, wait for countdown to reach 0 | Hold released automatically; error "Your stall hold has expired"; user returned to map to re-select. | Hold cleared on expiry; map refreshed. | **PASS** |
+| **TC-20** | Two users pick same stall | User A holds stall X; User B attempts to hold same stall X | User B gets HTTP 409: "Stall 'X' is held by another user. Please choose another." | 409 returned; only one user holds the stall. | **PASS** |
+| **TC-21** | Book already-booked stall via API | Attempt to hold a stall whose status is BOOKED | HTTP 409: "Stall 'X' is already booked. Please choose another." | 409 returned; stall not assigned. | **PASS** |
+| **TC-22** | Tampered frontend price ignored | Submit booking with a fabricated lower amount | Backend ignores any frontend amount; total recomputed from DB stall prices inside transaction. | Charged amount equals DB stall total; tampering has no effect. | **PASS** |
+| **TC-23** | Cancelled booking releases stalls | Admin cancels a confirmed exhibitor booking | Booking's `booking_stalls` links removed; those stalls revert to `AVAILABLE`. | Stalls freed and shown as available on map. | **PASS** |
+| **TC-24** | Visitor booking without stalls | Visitor (`bookerType=VISITOR`) submits booking with no stallCodes | Booking succeeds; quantity from attendee count; no stall required. | Visitor booking created without stalls. | **PASS** |
+| **TC-25** | Poll keeps map current | While holding stalls, another admin cancels a different booking freeing a stall | Map refreshes every 10–15 s; newly-free stall appears `AVAILABLE`. | Poll updates stall status without full reload. | **PASS** |
 
 ---
 
@@ -170,9 +193,19 @@ Attach screenshot or console/server log snippet here.
    - Multi-parameter filtering by event ID, status, and live text search across reference, contact details, and organization.
    - Instant booking confirmation and cancellation controls with confirmation dialogues.
 5. **Robust Spring Boot Backend:**
-   - `Booking` entity with strict relationships to existing `Event` table.
-   - Defensive validation checks: prevents duplicate bookings per email/event, rejects bookings on past or closed events.
-   - Comprehensive test suite with 14 unit and integration tests (`BookingServiceTest` and `BookingControllerTest`).
+    - `Booking` entity with strict relationships to existing `Event` table.
+    - Defensive validation checks: prevents duplicate bookings per email/event, rejects bookings on past or closed events.
+    - Comprehensive test suite with unit and integration tests (`BookingServiceTest`, `BookingControllerTest`, `StallServiceTest`, `StallControllerTest`).
+6. **Stall Selection Step (`/book/stalls`) — New:**
+    - `stalls`, `booking_stalls`, `stall_holds` tables; `stalls_seed.sql` for Dec 2026 event (49 stalls seeded).
+    - `GET /api/events/{eventId}/stalls` — all stalls with live status (AVAILABLE / HELD / BOOKED).
+    - `POST /api/stalls/hold` — atomic hold with pessimistic row locks; 409 on conflict; default 10 min TTL.
+    - `POST /api/stalls/release` — release hold on deselect / back / expiry.
+    - `POST /api/bookings` now accepts `stallCodes` + `holdToken` + `sessionId`; re-validates hold inside one transaction, locks stall rows, saves `booking_stalls`, computes total from DB prices (frontend amount never trusted).
+    - `@EnableScheduling` + scheduled job sweeps expired holds.
+    - Max 5 stalls per booking (configurable); ≥1 stall required for Exhibitor/Sponsor; Visitors skip stall selection.
+    - Admin stall occupancy list per event; cancelling a booking frees its stalls.
+    - Race-condition handling: concurrent stall picks serialize; only one succeeds, other gets a clear 409 message.
 
 ### Technologies Used
 - **Frontend:** React 18, React Router v6, CSS custom property design system (vanilla CSS, zero arbitrary Tailwind dependencies).
@@ -193,3 +226,11 @@ Attach screenshot or console/server log snippet here.
    - Fixed stall quota per hall/venue and stall numbering maps.
 4. **Official Notification Channels:**
    - WhatsApp Business API (Twilio / Wati) or SMTP email server credentials for sending automated transactional SMS/emails.
+
+5. **Stall Selection — Floor Plan & Category Mapping (from `SHREE_SAKHI_DEC_2026.pdf`):**
+   - The floor-plan PDF was **not present in the repository**, so stall → category mapping (PREMIUM / REGULAR / CLASSIC / SINGLE_TABLE), grid positions (pos_x, pos_y, width, height), entry/exit/stage/stairs/ORG locations, and whether lettered units A–H are Single Tables could **not** be read from the image.
+   - All 49 stalls (codes 1–41 + A–H) are seeded with placeholder category `REGULAR` (₹4000) and position (0,0,1×1), clearly labelled "Pending client confirmation" in `stalls_seed.sql`.
+   - Exact category for every stall, the Single-Table status of units A–H, and floor-plan geometry must be confirmed by the client from the PDF colours/legend before the seeded prices/positions are treated as final.
+6. **Stall Selection — Business Rules:**
+   - Hold TTL (default 10 min), max stalls per booking (default 5), and cancellation/refund rules are configurable defaults pending client sign-off.
+

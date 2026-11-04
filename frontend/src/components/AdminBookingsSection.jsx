@@ -220,6 +220,7 @@ export default function AdminBookingsSection({ showToast }) {
                     <th>Type</th>
                     <th>Event</th>
                     <th>Qty</th>
+                    <th>Stalls</th>
                     <th>Amount</th>
                     <th>Booking Status</th>
                     <th>Payment</th>
@@ -273,6 +274,12 @@ export default function AdminBookingsSection({ showToast }) {
 
                       <td style={{ textAlign: 'center', fontWeight: 600 }}>
                         {b.quantity || 1}
+                      </td>
+
+                      <td style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                        {b.stallCodes && b.stallCodes.length > 0
+                          ? b.stallCodes.join(', ')
+                          : (b.bookerType === 'VISITOR' ? '—' : '—')}
                       </td>
 
                       <td style={{ fontWeight: 600 }}>
@@ -424,6 +431,21 @@ export default function AdminBookingsSection({ showToast }) {
                 <small style={{ color: 'var(--color-text-muted)' }}>Quantity</small>
                 <div>{activeBooking.quantity}</div>
               </div>
+
+              {(activeBooking.bookedStalls && activeBooking.bookedStalls.length > 0) && (
+                <div style={{ gridColumn: 'span 2' }}>
+                  <small style={{ color: 'var(--color-text-muted)' }}>Booked Stall(s)</small>
+                  <div style={{ fontSize: '0.85rem' }}>
+                    {activeBooking.bookedStalls.map(s => `${s.stallCode} (${s.sizeLabel || 'size pending'}, ${(s.stallType || 'Regular')}) — ₹${Number(s.price || 0).toLocaleString('en-IN')}`).join('  |  ')}
+                  </div>
+                </div>
+              )}
+              {(activeBooking.stallCodes && activeBooking.stallCodes.length > 0 && !(activeBooking.bookedStalls && activeBooking.bookedStalls.length > 0)) && (
+                <div>
+                  <small style={{ color: 'var(--color-text-muted)' }}>Stall Code(s)</small>
+                  <div>{activeBooking.stallCodes.join(', ')}</div>
+                </div>
+              )}
               <div>
                 <small style={{ color: 'var(--color-text-muted)' }}>Booking Status</small>
                 <div>
