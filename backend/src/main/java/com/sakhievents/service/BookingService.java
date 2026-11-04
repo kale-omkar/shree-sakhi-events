@@ -3,23 +3,33 @@ package com.sakhievents.service;
 import com.sakhievents.dto.BookingRequestDTO;
 import com.sakhievents.dto.BookingResponseDTO;
 import com.sakhievents.dto.BookingStatusUpdateDTO;
+import com.sakhievents.dto.stall.StallDTO;
 import com.sakhievents.model.Booking;
+import com.sakhievents.model.Booking.BookingStatus;
 import com.sakhievents.model.Event;
+import com.sakhievents.model.booking.BookingStall;
+import com.sakhievents.model.stall.Stall;
 import com.sakhievents.payment.PaymentResult;
 import com.sakhievents.payment.PaymentService;
 import com.sakhievents.repository.BookingRepository;
+import com.sakhievents.repository.booking.BookingStallRepository;
 import com.sakhievents.repository.EventRepository;
+import com.sakhievents.repository.stall.StallRepository;
+import com.sakhievents.service.stall.StallService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Year;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Booking service — Jatin Patil's module.
  * Handles create, status-check, payment flow, and admin operations.
+ * Extended with stall selection support.
  */
 @Service
 public class BookingService {
@@ -29,6 +39,15 @@ public class BookingService {
 
     @Autowired
     private EventRepository eventRepository;   // reuse existing repo — no duplication
+
+    @Autowired
+    private BookingStallRepository bookingStallRepository; // new: booking-stall junction
+
+    @Autowired
+    private StallRepository stallRepository;   // new: stall lookups
+
+    @Autowired
+    private StallService stallService;         // new: stall hold validation
 
     @Autowired
     private PaymentService paymentService;
@@ -70,11 +89,29 @@ public class BookingService {
             }
         }
 
-        // 6. Generate sequential booking reference: SSE-<YEAR>-<NNNN>
+        // 6. Stall selection handling (EXHIBITOR / SPONSOR)
+        List<String> stallCodes = dto.getStallCodes() != null ? dto.getStallCodes() : List.of();
+        boolean requiresStalls = dto.getBookerType() == Booking.BookerType.EXHIBITOR
+                || dto.getBookerType() == Booking.BookerType.SPONSOR;
+
+        if (requiresStalls && stallCodes.isEmpty()) {
+            throw new RuntimeException(
+                    "At least one stall must be selected for " + dto.getBookerType() + " bookings.");
+        }
+
+        BigDecimal stallTotal = BigDecimal.ZERO;
+        if (!stallCodes.isEmpty()) {
+            // Re-validate hold server-side inside this transaction (locks stall rows),
+            // computes the backend-calculated total from DB prices, consumes the hold.
+            stallTotal = stallService.validateAndConsumeHold(
+                    dto.getEventId(), stallCodes, dto.getHoldToken(), dto.getSessionId());
+        }
+
+        // 7. Generate sequential booking reference: SSE-<YEAR>-<NNNN>
         long total = bookingRepository.countAll();
         String bookingRef = String.format("SSE-%d-%04d", Year.now().getValue(), total + 1);
 
-        // 7. Build and persist booking
+        // 8. Build and persist booking
         Booking booking = new Booking();
         booking.setBookingRef(bookingRef);
         booking.setEvent(event);
@@ -83,22 +120,57 @@ public class BookingService {
         booking.setCompany(dto.getCompany());
         booking.setPhone(dto.getPhone());
         booking.setEmail(dto.getEmail());
-        booking.setQuantity(dto.getQuantity());
+        booking.setQuantity(requiresStalls && !stallCodes.isEmpty() ? stallCodes.size() : dto.getQuantity());
         booking.setMessage(dto.getMessage());
         booking.setBookingStatus(Booking.BookingStatus.PENDING);
         booking.setPaymentStatus(Booking.PaymentStatus.NOT_REQUIRED);
-        // amount: pending client confirmation on fee structure — not set here
+        // Amount computed on the backend from DB stall prices — never trust frontend amount
+        booking.setAmount(stallTotal);
 
         Booking saved = bookingRepository.save(booking);
-        return BookingResponseDTO.fromEntity(saved);
+
+        // 9. Persist booking-stall links (snapshot price at booking time)
+        if (!stallCodes.isEmpty()) {
+            for (String code : stallCodes) {
+                Stall stall = stallRepository.findByEventIdAndStallCode(dto.getEventId(), code)
+                        .orElseThrow(() -> new RuntimeException("Stall '" + code + "' not found."));
+                BookingStall bs = BookingStall.builder()
+                        .booking(saved)
+                        .stall(stall)
+                        .priceAtBooking(stall.getPrice())
+                        .build();
+                bookingStallRepository.save(bs);
+            }
+        }
+
+        BookingResponseDTO response = BookingResponseDTO.fromEntity(saved);
+        response.setStallCodes(stallCodes);
+        if (!stallCodes.isEmpty()) {
+            response.setBookedStalls(stallCodes.stream()
+                    .map(code -> {
+                        Stall s = stallRepository.findByEventIdAndStallCode(dto.getEventId(), code)
+                                .orElseThrow(() -> new RuntimeException("Stall '" + code + "' not found."));
+                        return StallDTO.builder()
+                                .id(s.getId())
+                                .stallCode(s.getStallCode())
+                                .stallType(s.getStallType() != null ? s.getStallType().name() : null)
+                                .sizeLabel(s.getSizeLabel())
+                                .price(s.getPrice())
+                                .posX(s.getPosX())
+                                .posY(s.getPosY())
+                                .width(s.getWidth())
+                                .height(s.getHeight())
+                                .status("BOOKED")
+                                .isActive(s.getIsActive())
+                                .build();
+                    })
+                    .collect(Collectors.toList()));
+        }
+        return response;
     }
 
     // ─── Public: Status Check ─────────────────────────────────────────────────
 
-    /**
-     * Public status lookup — requires BOTH ref AND email to prevent enumeration attacks.
-     * Never exposes another user's booking.
-     */
     public BookingResponseDTO getBookingStatus(String bookingRef, String email) {
         return bookingRepository.findByBookingRefAndEmailIgnoreCase(bookingRef, email)
                 .map(BookingResponseDTO::fromEntity)
@@ -124,9 +196,47 @@ public class BookingService {
             bookings = bookingRepository.findAllOrderByCreatedAtDesc();
         }
 
-        return bookings.stream()
+        List<BookingResponseDTO> dtos = bookings.stream()
                 .map(BookingResponseDTO::fromEntity)
                 .collect(Collectors.toList());
+
+        // Enrich with booked stalls so the admin list/detail shows stalls + total
+        if (!dtos.isEmpty()) {
+            List<Long> bookingIds = dtos.stream().map(BookingResponseDTO::getId).collect(Collectors.toList());
+            List<BookingStall> links = bookingStallRepository.findByBookingIdIn(bookingIds);
+
+            java.util.Map<Long, List<BookingStall>> byBooking = links.stream()
+                    .collect(Collectors.groupingBy(bs -> bs.getBooking().getId()));
+
+            for (BookingResponseDTO dto : dtos) {
+                List<BookingStall> bLinks = byBooking.get(dto.getId());
+                if (bLinks != null && !bLinks.isEmpty()) {
+                    List<String> codes = new ArrayList<>();
+                    List<StallDTO> stallDtos = new ArrayList<>();
+                    for (BookingStall bs : bLinks) {
+                        Stall s = bs.getStall();
+                        codes.add(s.getStallCode());
+                        stallDtos.add(StallDTO.builder()
+                                .id(s.getId())
+                                .stallCode(s.getStallCode())
+                                .stallType(s.getStallType() != null ? s.getStallType().name() : null)
+                                .sizeLabel(s.getSizeLabel())
+                                .price(s.getPrice())
+                                .posX(s.getPosX())
+                                .posY(s.getPosY())
+                                .width(s.getWidth())
+                                .height(s.getHeight())
+                                .status("BOOKED")
+                                .isActive(s.getIsActive())
+                                .build());
+                    }
+                    dto.setStallCodes(codes);
+                    dto.setBookedStalls(stallDtos);
+                }
+            }
+        }
+
+        return dtos;
     }
 
     // ─── Admin: Update Booking Status ─────────────────────────────────────────
@@ -136,11 +246,19 @@ public class BookingService {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + id));
 
+        BookingStatus previous = booking.getBookingStatus();
         booking.setBookingStatus(dto.getBookingStatus());
         if (dto.getPaymentStatus() != null)   booking.setPaymentStatus(dto.getPaymentStatus());
         if (dto.getPaymentReference() != null) booking.setPaymentReference(dto.getPaymentReference());
 
-        return BookingResponseDTO.fromEntity(bookingRepository.save(booking));
+        Booking saved = bookingRepository.save(booking);
+
+        // If cancelled, release its stalls so they become bookable again
+        if (previous != BookingStatus.CANCELLED && booking.getBookingStatus() == BookingStatus.CANCELLED) {
+            bookingStallRepository.deleteByBookingId(saved.getId());
+        }
+
+        return BookingResponseDTO.fromEntity(saved);
     }
 
     // ─── Payment Flow ─────────────────────────────────────────────────────────

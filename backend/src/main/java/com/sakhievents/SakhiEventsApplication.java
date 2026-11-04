@@ -5,6 +5,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @SpringBootApplication
+@EnableScheduling
 public class SakhiEventsApplication {
 
     public static void main(String[] args) {
@@ -78,6 +80,12 @@ public class SakhiEventsApplication {
                                     System.setProperty("spring.datasource.password", value);
                                 } else if ("SERVER_PORT".equalsIgnoreCase(key)) {
                                     System.setProperty("server.port", value);
+                                } else if ("STALL_HOLD_TTL_MINUTES".equalsIgnoreCase(key)) {
+                                    System.setProperty("stall.hold.ttl.minutes", value);
+                                } else if ("STALL_MAX_PER_BOOKING".equalsIgnoreCase(key)) {
+                                    System.setProperty("stall.max.per.booking", value);
+                                } else if ("STALL_CLEANUP_FIXED_DELAY_MS".equalsIgnoreCase(key)) {
+                                    System.setProperty("stall.cleanup.fixedDelay.ms", value);
                                 }
                             }
                         }

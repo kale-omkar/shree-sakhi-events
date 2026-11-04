@@ -147,6 +147,22 @@ export default function BookingConfirmPage() {
               <div className="confirm-detail__value">{booking.quantity || 1}</div>
             </div>
 
+            {(booking.bookedStalls && booking.bookedStalls.length > 0) && (
+              <div className="confirm-detail" style={{ gridColumn: 'span 2' }}>
+                <div className="confirm-detail__label">Booked Stall(s)</div>
+                <div className="confirm-detail__value" style={{ fontSize: '0.85rem' }}>
+                  {booking.bookedStalls.map(s => `${s.stallCode} • ${s.sizeLabel || 'size pending'} • ${(s.stallType || 'Regular')} • ₹${Number(s.price || 0).toLocaleString('en-IN')}`).join('  |  ')}
+                </div>
+              </div>
+            )}
+
+            {(booking.stallCodes && booking.stallCodes.length > 0 && !(booking.bookedStalls && booking.bookedStalls.length > 0)) && (
+              <div className="confirm-detail">
+                <div className="confirm-detail__label">Stall Code(s)</div>
+                <div className="confirm-detail__value">{booking.stallCodes.join(', ')}</div>
+              </div>
+            )}
+
             <div className="confirm-detail">
               <div className="confirm-detail__label">Booking Status</div>
               <div className="confirm-detail__value">
