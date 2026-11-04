@@ -4,7 +4,7 @@ import { COMPANY_INFO } from '../constants/companyInfo';
 import './Navbar.css';
 
 const NAV_LINKS = [
-  { label: 'Home',  to: '/' },
+  { label: 'Home', to: '/' },
   { label: 'About Us', to: '/about' },
   {
     label: 'Events',
@@ -41,8 +41,26 @@ const NAV_LINKS = [
     ],
   },
   { label: 'Gallery', to: '/gallery' },
-  { label: 'Book Stall', to: '/book' },
-  { label: 'Booking Status', to: '/book/status' },
+  {
+    label: 'Stall Booking',
+    to: '/book',
+    dropdown: [
+      {
+        label: 'Book a Stall',
+        to: '/book',
+        icon: '🎪',
+        badge: 'Book',
+        desc: 'Reserve exhibitor space for upcoming exhibitions'
+      },
+      {
+        label: 'Booking Status',
+        to: '/book/status',
+        icon: '🔍',
+        badge: 'Status',
+        desc: 'Track and verify your stall booking status'
+      },
+    ],
+  },
   { label: 'Contact', to: '/contact' },
   { label: 'Enquiry', to: '/enquiry' },
   { label: 'Admin', to: '/admin' },
@@ -53,7 +71,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDrop, setOpenDrop] = useState(null);
   const location = useLocation();
-  const menuRef  = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -80,10 +98,14 @@ export default function Navbar() {
   }, []);
 
   const isLinkActive = (link) => {
+    if (link.to === '/') return location.pathname === '/';
     if (link.dropdown) {
-      return link.dropdown.some(d => location.pathname === d.to);
+      return (
+        link.dropdown.some(d => location.pathname === d.to || location.pathname.startsWith(d.to + '/')) ||
+        location.pathname.startsWith(link.to)
+      );
     }
-    return location.pathname === link.to;
+    return location.pathname === link.to || location.pathname.startsWith(link.to + '/');
   };
 
   const primaryWhatsApp = COMPANY_INFO.whatsappNumbers[0];
@@ -106,7 +128,7 @@ export default function Navbar() {
         </Link>
 
         {/* ── Desktop Navigation Links ── */}
-        <nav aria-label="Main Navigation">
+        <nav aria-label="Main Navigation" className="navbar__nav">
           <ul className="navbar__links" role="list">
             {NAV_LINKS.map((link) => {
               const hasDrop = !!link.dropdown;
@@ -127,7 +149,7 @@ export default function Navbar() {
                       onClick={() => setOpenDrop(isOpen ? null : link.to)}
                       aria-haspopup="true"
                       aria-expanded={isOpen}
-                      id="nav-dropdown-trigger"
+                      id={`nav-dropdown-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       <span>{link.label}</span>
                       <ChevronIcon className={`navbar__chevron ${isOpen ? 'navbar__chevron--open' : ''}`} />
@@ -149,7 +171,7 @@ export default function Navbar() {
                       aria-label={`${link.label} options`}
                     >
                       <div className="navbar__dropdown-header">
-                        <span>Exhibitions & Events</span>
+                        <span>{link.label}</span>
                       </div>
                       <div className="navbar__dropdown-list">
                         {link.dropdown.map((sub) => {
@@ -285,8 +307,8 @@ export default function Navbar() {
 const ChevronIcon = ({ className = '', style }) => (
   <svg
     className={className}
-    width="13"
-    height="13"
+    width="12"
+    height="12"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
