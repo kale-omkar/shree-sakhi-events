@@ -97,6 +97,18 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
+  // Close menus on Escape key
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+        setOpenDrop(null);
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   const isLinkActive = (link) => {
     if (link.to === '/') return location.pathname === '/';
     if (link.dropdown) {
@@ -139,8 +151,6 @@ export default function Navbar() {
                 <li
                   key={link.to}
                   className={`navbar__item ${hasDrop ? 'navbar__item--has-dropdown' : ''}`}
-                  onMouseEnter={() => hasDrop && setOpenDrop(link.to)}
-                  onMouseLeave={() => hasDrop && setOpenDrop(null)}
                 >
                   {hasDrop ? (
                     <button
