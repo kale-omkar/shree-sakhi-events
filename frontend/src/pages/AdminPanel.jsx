@@ -505,16 +505,16 @@ export default function AdminPanel() {
         {view === 'list' && !loading && !error && (
           <div className="admin-stats">
             {[
-              { label: 'Total Events', val: events.length, icon: '📋' },
-              { label: 'Upcoming',     val: events.filter(e => e.eventType === 'UPCOMING').length, icon: '🟢' },
-              { label: 'Past',         val: events.filter(e => e.eventType === 'PAST').length,     icon: '⚫' },
-              { label: 'Featured',     val: events.filter(e => e.isFeatured).length,               icon: '⭐' },
-              { label: 'Open Reg.',    val: events.filter(e => e.registrationStatus === 'OPEN').length, icon: '🎟️' },
+              { id: 'total',    label: 'Total Events', val: events.length, icon: '📋' },
+              { id: 'upcoming', label: 'Upcoming',     val: events.filter(e => e.eventType === 'UPCOMING').length, icon: '🟢' },
+              { id: 'past',     label: 'Past Events',  val: events.filter(e => e.eventType === 'PAST').length,     icon: '🏛️' },
+              { id: 'featured', label: 'Featured',     val: events.filter(e => e.isFeatured).length,               icon: '⭐' },
+              { id: 'open',     label: 'Open Reg.',    val: events.filter(e => e.registrationStatus === 'OPEN').length, icon: '🎟️' },
             ].map(s => (
-              <div key={s.label} className="admin-stat">
-                <span className="admin-stat__icon">{s.icon}</span>
-                <span className="admin-stat__val">{s.val}</span>
+              <div key={s.id} className={`admin-stat admin-stat--${s.id}`}>
                 <span className="admin-stat__label">{s.label}</span>
+                <span className="admin-stat__val">{s.val}</span>
+                <span className="admin-stat__icon" aria-hidden="true">{s.icon}</span>
               </div>
             ))}
           </div>
