@@ -212,7 +212,7 @@ export default function AdminBookingsSection({ showToast }) {
             </div>
           ) : (
             <div className="admin-table-wrap" style={{ overflowX: 'auto' }}>
-              <table className="admin-table" style={{ width: '100%', minWidth: '850px' }}>
+              <table className="admin-table" style={{ width: '100%', minWidth: '780px' }}>
                 <thead>
                   <tr>
                     <th>Ref Code</th>
