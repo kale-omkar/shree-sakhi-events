@@ -48,6 +48,9 @@ class BookingControllerTest {
     @MockBean
     private com.sakhievents.service.EventService eventService;
 
+    @MockBean
+    private com.sakhievents.service.stall.StallService stallService;
+
     @Test
     @DisplayName("POST /api/bookings - should return 201 when payload is valid")
     void testCreateBookingValidPayload() throws Exception {

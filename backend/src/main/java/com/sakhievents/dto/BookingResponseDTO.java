@@ -1,10 +1,12 @@
 package com.sakhievents.dto;
 
+import com.sakhievents.dto.stall.StallDTO;
 import com.sakhievents.model.Booking;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Safe public response DTO for bookings — Jatin Patil's module.
@@ -34,6 +36,12 @@ public class BookingResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    /** Stall codes booked under this booking (for EXHIBITOR/SPONSOR) */
+    private List<String> stallCodes;
+
+    /** Stall details (code, type, size, price) booked under this booking */
+    private List<StallDTO> bookedStalls;
+
     /** Factory method — maps entity to DTO */
     public static BookingResponseDTO fromEntity(Booking b) {
         BookingResponseDTO dto = new BookingResponseDTO();
@@ -60,5 +68,13 @@ public class BookingResponseDTO {
         dto.setCreatedAt(b.getCreatedAt());
         dto.setUpdatedAt(b.getUpdatedAt());
         return dto;
+    }
+
+    public void setStallCodes(List<String> stallCodes) {
+        this.stallCodes = stallCodes;
+    }
+
+    public void setBookedStalls(List<StallDTO> bookedStalls) {
+        this.bookedStalls = bookedStalls;
     }
 }

@@ -535,16 +535,16 @@ export default function AdminPanel() {
         {view === 'list' && !loading && !error && (
           <div className="admin-stats">
             {[
-              { label: 'Total Events', val: events.length, icon: '📋' },
-              { label: 'Upcoming',     val: events.filter(e => e.eventType === 'UPCOMING').length, icon: '🟢' },
-              { label: 'Past',         val: events.filter(e => e.eventType === 'PAST').length,     icon: '⚫' },
-              { label: 'Featured',     val: events.filter(e => e.isFeatured).length,               icon: '⭐' },
-              { label: 'Open Reg.',    val: events.filter(e => e.registrationStatus === 'OPEN').length, icon: '🎟️' },
+              { id: 'total',    label: 'Total Events', val: events.length, icon: '📋' },
+              { id: 'upcoming', label: 'Upcoming',     val: events.filter(e => e.eventType === 'UPCOMING').length, icon: '🟢' },
+              { id: 'past',     label: 'Past Events',  val: events.filter(e => e.eventType === 'PAST').length,     icon: '🏛️' },
+              { id: 'featured', label: 'Featured',     val: events.filter(e => e.isFeatured).length,               icon: '⭐' },
+              { id: 'open',     label: 'Open Reg.',    val: events.filter(e => e.registrationStatus === 'OPEN').length, icon: '🎟️' },
             ].map(s => (
-              <div key={s.label} className="admin-stat">
-                <span className="admin-stat__icon">{s.icon}</span>
-                <span className="admin-stat__val">{s.val}</span>
+              <div key={s.id} className={`admin-stat admin-stat--${s.id}`}>
                 <span className="admin-stat__label">{s.label}</span>
+                <span className="admin-stat__val">{s.val}</span>
+                <span className="admin-stat__icon" aria-hidden="true">{s.icon}</span>
               </div>
             ))}
           </div>
@@ -590,14 +590,14 @@ export default function AdminPanel() {
                 <table className="admin-table" aria-label="Events list">
                   <thead>
                     <tr>
-                      <th>Event</th>
-                      <th>Date</th>
-                      <th>Venue</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                      <th>Capacity</th>
-                      <th>Featured</th>
-                      <th>Actions</th>
+                      <th className="admin-col-event">Event</th>
+                      <th className="admin-col-date">Date</th>
+                      <th className="admin-col-venue">Venue</th>
+                      <th className="admin-col-type">Type</th>
+                      <th className="admin-col-status">Status</th>
+                      <th className="admin-col-capacity">Capacity</th>
+                      <th className="admin-col-featured">Featured</th>
+                      <th className="admin-col-actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -612,9 +612,9 @@ export default function AdminPanel() {
                             ? new Date(event.eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
                             : '—'}
                         </td>
-                        <td className="admin-table__venue">{event.venue || '—'}</td>
-                        <td>{TYPE_LABELS[event.eventType] || event.eventType}</td>
-                        <td>
+                        <td className="admin-table__venue" title={event.venue || ''}>{event.venue || '—'}</td>
+                        <td className="admin-table__type">{TYPE_LABELS[event.eventType] || event.eventType}</td>
+                        <td className="admin-table__status">
                           <span className={`badge ${STATUS_LABELS[event.registrationStatus]?.cls || 'badge-closed'}`}>
                             {STATUS_LABELS[event.registrationStatus]?.label || event.registrationStatus}
                           </span>
@@ -622,7 +622,7 @@ export default function AdminPanel() {
                         <td className="admin-table__capacity">
                           {event.registeredCount ?? 0} / {event.maxCapacity ?? '∞'}
                         </td>
-                        <td>
+                        <td className="admin-table__featured">
                           <button
                             className={`featured-btn ${event.isFeatured ? 'featured-btn--on' : ''}`}
                             onClick={() => handleToggleFeatured(event)}
@@ -633,7 +633,7 @@ export default function AdminPanel() {
                             {event.isFeatured ? '⭐' : '☆'}
                           </button>
                         </td>
-                        <td>
+                        <td className="admin-table__actions-cell">
                           <div className="admin-table__actions">
                             <button
                               className="btn btn-outline btn-sm"

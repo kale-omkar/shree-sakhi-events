@@ -4,6 +4,8 @@ import com.sakhievents.model.Booking;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * Request DTO for creating a new booking — Jatin Patil's module.
  * Bean validation annotations match the GlobalExceptionHandler style.
@@ -46,4 +48,13 @@ public class BookingRequestDTO {
     /** User must explicitly accept terms — validated server-side */
     @AssertTrue(message = "You must accept the terms and conditions to proceed")
     private Boolean consent;
+
+    /** Stall codes selected in the Stall Selection step (EXHIBITOR/SPONSOR) */
+    private List<String> stallCodes;
+
+    /** Hold token returned by POST /api/stalls/hold (server-validated) */
+    private String holdToken;
+
+    /** Client session id used when holding stalls */
+    private String sessionId;
 }

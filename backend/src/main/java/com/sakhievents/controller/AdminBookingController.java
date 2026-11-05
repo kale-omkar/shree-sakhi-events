@@ -3,8 +3,10 @@ package com.sakhievents.controller;
 import com.sakhievents.dto.ApiResponse;
 import com.sakhievents.dto.BookingResponseDTO;
 import com.sakhievents.dto.BookingStatusUpdateDTO;
+import com.sakhievents.dto.stall.StallDTO;
 import com.sakhievents.exception.UnauthorizedException;
 import com.sakhievents.service.BookingService;
+import com.sakhievents.service.stall.StallService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,17 +32,24 @@ import java.util.List;
 public class AdminBookingController {
 
     private final BookingService bookingService;
+    private final StallService stallService;
     private final String adminApiKey;
 
     public AdminBookingController(BookingService bookingService) {
-        this(bookingService, System.getProperty("admin.api.key", ""));
+        this(bookingService, null, System.getProperty("admin.api.key", ""));
+    }
+
+    public AdminBookingController(BookingService bookingService, String adminApiKey) {
+        this(bookingService, null, adminApiKey);
     }
 
     @Autowired
     public AdminBookingController(
             BookingService bookingService,
+            StallService stallService,
             @Value("${admin.api.key:}") String adminApiKey) {
         this.bookingService = bookingService;
+        this.stallService = stallService;
         this.adminApiKey = adminApiKey;
     }
 
@@ -58,6 +67,21 @@ public class AdminBookingController {
         List<BookingResponseDTO> bookings = bookingService.getAllBookings(eventId, status);
         return ResponseEntity.ok(ApiResponse.success(
                 "Bookings fetched successfully (" + bookings.size() + " records)", bookings));
+    }
+
+    /**
+     * GET /api/admin/events/{eventId}/stalls-occupancy
+     * Stall occupancy list per event — status AVAILABLE / HELD / BOOKED.
+     */
+    @GetMapping("/events/{eventId}/stalls-occupancy")
+    public ResponseEntity<ApiResponse<List<StallDTO>>> getStallOccupancy(
+            @RequestHeader(value = "X-Admin-Key", required = false) String adminKey,
+            @PathVariable Long eventId) {
+
+        validateAdminKey(adminKey);
+        List<StallDTO> stalls = stallService.getStalls(eventId, null);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Stall occupancy fetched (" + stalls.size() + " records)", stalls));
     }
 
     /**

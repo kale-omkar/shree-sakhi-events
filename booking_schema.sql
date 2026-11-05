@@ -57,6 +57,63 @@ VALUES (
     TRUE
 ) ON DUPLICATE KEY UPDATE `username` = `username`;
 
+-- =============================================================================
+-- Stalls module tables (Jatin Patil's Booking Module — Stall Selection step)
+-- =============================================================================
+
+-- 5. Create stalls table (one row per physical stall / unit for an event)
+CREATE TABLE IF NOT EXISTS `stalls` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `event_id` BIGINT NOT NULL COMMENT 'FK referencing events table',
+    `stall_code` VARCHAR(10) NOT NULL COMMENT 'Human-readable stall code e.g. 12, A, B',
+    `stall_type` ENUM('PREMIUM', 'REGULAR', 'CLASSIC', 'SINGLE_TABLE') NOT NULL COMMENT 'Category — pending client confirmation for Dec 2026',
+    `size_label` VARCHAR(20) NULL COMMENT 'Physical size e.g. 9x7, 10x7 (pending floor-plan geometry)',
+    `price` DECIMAL(10, 2) NOT NULL DEFAULT 0.00 COMMENT 'Stall price in INR',
+    `posx` INT NOT NULL DEFAULT 0 COMMENT 'Grid X position for floor-plan layout',
+    `posy` INT NOT NULL DEFAULT 0 COMMENT 'Grid Y position for floor-plan layout',
+    `width` INT NOT NULL DEFAULT 1 COMMENT 'Grid width in cells for floor-plan layout',
+    `height` INT NOT NULL DEFAULT 1 COMMENT 'Grid height in cells for floor-plan layout',
+    `is_active` BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Whether the stall is bookable',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_stalls_event` (`event_id`),
+    INDEX `idx_stalls_code` (`stall_code`),
+    UNIQUE KEY `uk_stalls_event_code` (`event_id`, `stall_code`),
+    CONSTRAINT `fk_stalls_event` FOREIGN KEY (`event_id`)
+        REFERENCES `events` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. Create booking_stalls junction table (stalls booked within a booking)
+CREATE TABLE IF NOT EXISTS `booking_stalls` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `booking_id` BIGINT NOT NULL COMMENT 'FK referencing bookings table',
+    `stall_id` BIGINT NOT NULL COMMENT 'FK referencing stalls table',
+    `price_at_booking` DECIMAL(10, 2) NOT NULL DEFAULT 0.00 COMMENT 'Snapshot of stall price at booking time',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_booking_stalls_booking` (`booking_id`),
+    INDEX `idx_booking_stalls_stall` (`stall_id`),
+    UNIQUE KEY `uk_booking_stalls_event_stall` (`booking_id`, `stall_id`),
+    CONSTRAINT `fk_booking_stalls_booking` FOREIGN KEY (`booking_id`)
+        REFERENCES `bookings` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_booking_stalls_stall` FOREIGN KEY (`stall_id`)
+        REFERENCES `stalls` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7. Create stall_holds table (temporary holds while user fills details)
+CREATE TABLE IF NOT EXISTS `stall_holds` (
+    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `stall_id` BIGINT NOT NULL COMMENT 'FK referencing stalls table',
+    `hold_token` VARCHAR(64) NOT NULL COMMENT 'Client-facing hold token (shared by all stalls in one hold)',
+    `session_id` VARCHAR(128) NOT NULL COMMENT 'Client session / browser identifier',
+    `expires_at` DATETIME NOT NULL COMMENT 'Hold expiry timestamp',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_stall_holds_stall` (`stall_id`),
+    INDEX `idx_stall_holds_token` (`hold_token`),
+    INDEX `idx_stall_holds_expires` (`expires_at`),
+    CONSTRAINT `fk_stall_holds_stall` FOREIGN KEY (`stall_id`)
+        REFERENCES `stalls` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 4. Seed realistic sample bookings for development and testing
 -- Reuses event IDs 1 and 2 from the existing events table
 INSERT INTO `bookings` (

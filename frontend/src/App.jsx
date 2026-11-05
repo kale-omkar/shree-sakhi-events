@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import EventsPage from './pages/EventsPage';
@@ -9,6 +10,8 @@ import PastEventsPage from './pages/PastEventsPage';
 import EventDetailPage from './pages/EventDetailPage';
 import RegisterPage from './pages/RegisterPage';
 import BookingPage from './pages/BookingPage';
+import StallSelection from './pages/StallSelection';
+import DetailsPage from './pages/DetailsPage';
 import MockPaymentPage from './pages/MockPaymentPage';
 import BookingConfirmPage from './pages/BookingConfirmPage';
 import BookingStatusPage from './pages/BookingStatusPage';
@@ -21,6 +24,7 @@ import './App.css';
 function App() {
   return (
     <>
+      <ScrollToTop />
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -32,6 +36,8 @@ function App() {
         <Route path="/events/:id" element={<EventDetailPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/book" element={<BookingPage />} />
+        <Route path="/book/stalls" element={<StallSelection />} />
+        <Route path="/book/details" element={<DetailsPage />} />
         <Route path="/book/pay" element={<MockPaymentPage />} />
         <Route path="/book/confirm" element={<BookingConfirmPage />} />
         <Route path="/book/status" element={<BookingStatusPage />} />

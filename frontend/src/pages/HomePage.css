@@ -620,6 +620,7 @@
 /* ── Why Section ── */
 .why-section {
   background: #FFFFFF;
+  padding: clamp(3rem, 5vw, 4.5rem) 0;
 }
 
 .why-grid {

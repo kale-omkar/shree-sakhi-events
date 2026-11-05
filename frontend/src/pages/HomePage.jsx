@@ -344,14 +344,14 @@ export default function HomePage() {
                 desc: 'A platform dedicated to women empowerment, entrepreneurship and business growth for home-based businesses and brands.'
               },
               {
-                icon: '👥',
-                title: '2,500+ Footfall',
-                desc: 'Exhibitions bring together talented entrepreneurs and shoppers with 2,500+ visitors per event.'
+                icon: '📍',
+                title: 'Prime Nashik Venues',
+                desc: 'Events hosted at prestigious locations — Patidar Bhavan, Nashik Road and Rajmata Mangal Karyalay, Meri — ensuring maximum reach and visibility.'
               },
               {
-                icon: '🎪',
-                title: '65+ Stalls',
-                desc: 'Each exhibition hosts 65+ stalls, providing opportunities for women to showcase their products.'
+                icon: '📣',
+                title: 'Wide Promotion',
+                desc: 'Every exhibition is promoted across social media, local networks and community groups to maximise footfall and brand exposure for exhibitors.'
               },
               {
                 icon: '🤝',

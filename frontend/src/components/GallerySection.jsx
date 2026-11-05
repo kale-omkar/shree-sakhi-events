@@ -192,41 +192,6 @@ export default function GallerySection({ isStandalonePage = false }) {
             </article>
           ))}
         </div>
-
-        {/* Trust Stats Bar underneath Gallery */}
-        <div className="gallery-stats-banner">
-          <div className="gallery-stat-item">
-            <span className="gallery-stat-icon">🎪</span>
-            <div>
-              <strong>65+ Curated Stalls</strong>
-              <p>Per Grand Exhibition</p>
-            </div>
-          </div>
-          <div className="gallery-stat-divider" aria-hidden="true" />
-          <div className="gallery-stat-item">
-            <span className="gallery-stat-icon">👥</span>
-            <div>
-              <strong>2,500+ Shoppers</strong>
-              <p>Active Footfall</p>
-            </div>
-          </div>
-          <div className="gallery-stat-divider" aria-hidden="true" />
-          <div className="gallery-stat-item">
-            <span className="gallery-stat-icon">🌸</span>
-            <div>
-              <strong>100% Women Led</strong>
-              <p>Empowerment &amp; Growth</p>
-            </div>
-          </div>
-          <div className="gallery-stat-divider" aria-hidden="true" />
-          <div className="gallery-stat-item">
-            <span className="gallery-stat-icon">📍</span>
-            <div>
-              <strong>Nashik Road</strong>
-              <p>Patidar Bhavan &amp; Rajmata Hall</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ── LIGHTBOX MODAL ── */}
