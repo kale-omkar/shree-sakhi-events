@@ -54,7 +54,9 @@ const handleResponse = async (res) => {
       const messages = Object.entries(data.data)
         .map(([field, msg]) => `${msg}`)
         .join(', ');
-      throw new Error(messages || data.message || 'Validation failed');
+      const error = new Error(messages || data.message || 'Validation failed');
+      error.fieldErrors = data.data;
+      throw error;
     }
     throw new Error(data.message || `Request failed with status ${res.status}`);
   }

@@ -5,7 +5,7 @@
 /* ── Hero ── */
 .past-hero {
   position: relative;
-  padding: 8rem 0 5rem;
+  padding: clamp(5.5rem, 10vh, 8rem) 0 clamp(3rem, 5vh, 5rem);
   overflow: hidden;
   text-align: center;
   background: linear-gradient(135deg, #0a0a0f 0%, #0d0a04 100%);
@@ -115,7 +115,7 @@
 .past-search {
   position: relative;
   flex: 1;
-  min-width: 240px;
+  min-width: min(240px, 100%);
   display: flex;
   align-items: center;
 }
@@ -222,7 +222,7 @@
 /* Events grid */
 .past-events-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.5rem;
 }
 
@@ -544,9 +544,9 @@
 .section-header h2 { margin: 0; }
 .section-header p { color: var(--color-text-muted); font-size: 1rem; }
 
-/* ── Responsive ── */
+/* ── Responsive & Zoom Compatibility ── */
 @media (max-width: 1024px) {
-  .past-events-grid { grid-template-columns: repeat(2, 1fr); }
+  .past-events-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 768px) {
@@ -556,7 +556,8 @@
 
   .past-events-grid { grid-template-columns: 1fr; }
   .past-controls { flex-direction: column; align-items: stretch; }
-  .past-sort__select { min-width: auto; }
+  .past-search { min-width: 0; }
+  .past-sort__select { min-width: 0; }
   .past-timeline__item { grid-template-columns: 32px 1fr; gap: 1rem; }
   .past-alt-inner { flex-direction: column; text-align: center; }
 

@@ -7,7 +7,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: var(--space-4xl) var(--space-md);
+  padding: clamp(var(--space-2xl), 6vw, var(--space-4xl)) var(--space-md);
 }
 
 .payment-card {
@@ -23,7 +23,7 @@
 
 .payment-card__header {
   background: var(--grad-primary);
-  padding: var(--space-xl) var(--space-2xl);
+  padding: clamp(1.25rem, 4vw, var(--space-xl)) clamp(1.25rem, 4vw, var(--space-2xl));
   text-align: center;
   position: relative;
 }
@@ -70,7 +70,7 @@
 }
 
 .payment-card__body {
-  padding: var(--space-xl) var(--space-2xl);
+  padding: clamp(1.25rem, 4vw, var(--space-xl)) clamp(1.25rem, 4vw, var(--space-2xl));
 }
 
 /* Booking ref box */
@@ -94,10 +94,11 @@
 
 .payment-ref-value {
   font-family: 'Courier New', monospace;
-  font-size: 1.3rem;
+  font-size: clamp(1.05rem, 3vw, 1.3rem);
   font-weight: 700;
   color: var(--color-primary);
   letter-spacing: 0.06em;
+  word-break: break-all;
 }
 
 /* Mock form fields */
@@ -155,10 +156,11 @@
 
 .payment-mock-number {
   font-family: 'Courier New', monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.2em;
+  font-size: clamp(0.9rem, 2.8vw, 1.1rem);
+  letter-spacing: clamp(0.08em, 1.2vw, 0.2em);
   margin-bottom: var(--space-sm);
   color: rgba(255,255,255,0.9);
+  word-break: break-all;
 }
 
 .payment-mock-meta {
@@ -221,3 +223,15 @@
 }
 
 .payment-back-link:hover { color: var(--color-primary); }
+
+/* ── Responsive & Zoom Compatibility ── */
+@media (max-width: 480px) {
+  .payment-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .payment-card__header h2 {
+    font-size: 1.25rem;
+  }
+}

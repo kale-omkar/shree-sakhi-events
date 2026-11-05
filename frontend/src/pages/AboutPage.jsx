@@ -91,39 +91,47 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── VISION ── */}
-      <section className="about-vm-section about-vision" aria-labelledby="vision-heading">
-        <div className="about-vm-section__bg" aria-hidden="true" />
-        <div className="container about-vm-section__inner">
-          <div className="about-vm-section__badge" aria-hidden="true">
-            <span className="about-vm-section__icon">🌟</span>
-          </div>
-          <div className="about-vm-section__content scroll-reveal" ref={reveal}>
-            <span className="section-label">Vision</span>
-            <h2 id="vision-heading">
-              Our <span className="text-gradient">Vision</span>
+      {/* ── VISION & MISSION ── */}
+      <section className="about-vm-section" aria-labelledby="vm-heading">
+        <div className="container">
+          <div className="section-header text-center">
+            <span className="section-label">Guiding Principles</span>
+            <h2 id="vm-heading">
+              Our <span className="text-gradient">Vision &amp; Mission</span>
             </h2>
-            <blockquote className="about-vm-section__quote">
-              "{COMPANY_INFO.vision}"
-            </blockquote>
+            <p>Empowering women entrepreneurs and creating meaningful market opportunities</p>
           </div>
-        </div>
-      </section>
 
-      {/* ── MISSION ── */}
-      <section className="about-vm-section about-mission" aria-labelledby="mission-heading">
-        <div className="container about-vm-section__inner about-vm-section__inner--reverse">
-          <div className="about-vm-section__badge about-vm-section__badge--gold" aria-hidden="true">
-            <span className="about-vm-section__icon">🎯</span>
-          </div>
-          <div className="about-vm-section__content scroll-reveal" ref={reveal}>
-            <span className="section-label">Mission</span>
-            <h2 id="mission-heading">
-              Our <span className="text-gradient">Mission</span>
-            </h2>
-            <blockquote className="about-vm-section__quote">
-              "{COMPANY_INFO.mission}"
-            </blockquote>
+          <div className="about-vm-grid">
+            <div className="about-vm-card card scroll-reveal" ref={reveal}>
+              <div className="about-vm-card__header">
+                <div className="about-vm-card__badge" aria-hidden="true">
+                  <span className="about-vm-card__icon">🌟</span>
+                </div>
+                <div>
+                  <span className="section-label">Vision</span>
+                  <h3 className="about-vm-card__title">Our Vision</h3>
+                </div>
+              </div>
+              <blockquote className="about-vm-card__quote">
+                "{COMPANY_INFO.vision}"
+              </blockquote>
+            </div>
+
+            <div className="about-vm-card card card--mission scroll-reveal" ref={reveal}>
+              <div className="about-vm-card__header">
+                <div className="about-vm-card__badge about-vm-card__badge--gold" aria-hidden="true">
+                  <span className="about-vm-card__icon">🎯</span>
+                </div>
+                <div>
+                  <span className="section-label">Mission</span>
+                  <h3 className="about-vm-card__title">Our Mission</h3>
+                </div>
+              </div>
+              <blockquote className="about-vm-card__quote">
+                "{COMPANY_INFO.mission}"
+              </blockquote>
+            </div>
           </div>
         </div>
       </section>

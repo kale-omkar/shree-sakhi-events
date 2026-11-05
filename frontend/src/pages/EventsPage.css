@@ -127,10 +127,18 @@
 .events-grid {
   display: grid;
   gap: var(--space-xl);
-  align-items: start;
+  /* stretch makes every cell fill the row's tallest card → uniform heights */
+  align-items: stretch;
 }
-.events-grid--3 { grid-template-columns: repeat(3, 1fr); }
-.events-grid--2 { grid-template-columns: repeat(2, 1fr); }
+/* Equal-width columns via 1fr — no hardcoded px values */
+.events-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.events-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Grid wrapper items must also be full height so EventCard can grow */
+.events-grid > div {
+  display: flex;
+  flex-direction: column;
+}
 
 /* ── Error ── */
 .error-banner {
@@ -164,14 +172,19 @@
 .no-events h3 { font-family: var(--font-display); color: var(--color-text); }
 .no-events p { color: var(--color-text-muted); }
 
-/* ── Responsive ── */
-@media (max-width: 900px) {
-  .events-grid--3 { grid-template-columns: repeat(2, 1fr); }
+/* ── Responsive & Zoom Compatibility ── */
+@media (max-width: 1024px) {
+  .events-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
 @media (max-width: 768px) {
+  .page-hero { padding: 5.5rem 0 3rem; }
   .events-controls { flex-direction: column; align-items: stretch; }
   .events-search { max-width: 100%; }
+  .events-grid--3,
+  .events-grid--2 { grid-template-columns: 1fr; }
 }
-@media (max-width: 600px) {
-  .events-grid--3, .events-grid--2 { grid-template-columns: 1fr; }
+
+@media (max-width: 480px) {
+  .category-pills { gap: 0.35rem; }
 }

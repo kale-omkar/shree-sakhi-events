@@ -179,24 +179,34 @@ export default function HomePage() {
             <h2 id="glimpses-heading">
               Glimpses of <span className="text-gradient">Our Events</span>
             </h2>
-            <p>Celebrating entrepreneurship, teamwork and memorable moments at Shree Sakhi Events.</p>
+            <p className="glimpses-subtitle">Celebrating entrepreneurship, teamwork and memorable moments at Shree Sakhi Events.</p>
           </div>
           <div className="glimpses-grid">
             <figure className="glimpses-item">
-              <img
-                src="/images/event-team-1.png"
-                alt="Women entrepreneurs and team at a Shree Sakhi Events exhibition"
-                className="glimpses-img"
-                loading="lazy"
-              />
+              <div className="glimpses-img-wrap">
+                <img
+                  src="/images/event-team-1.png"
+                  alt="Women entrepreneurs, team and partners at a Shree Sakhi Events exhibition"
+                  className="glimpses-img"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption className="glimpses-caption">
+                Celebrating the people and partnerships behind our successful exhibitions.
+              </figcaption>
             </figure>
             <figure className="glimpses-item">
-              <img
-                src="/images/event-team-2.png"
-                alt="Exhibition stalls and attendees at a Shree Sakhi Events grand exhibition"
-                className="glimpses-img"
-                loading="lazy"
-              />
+              <div className="glimpses-img-wrap">
+                <img
+                  src="/images/event-team-2.png"
+                  alt="Moments of appreciation and recognition with exhibition participants and team"
+                  className="glimpses-img"
+                  loading="lazy"
+                />
+              </div>
+              <figcaption className="glimpses-caption">
+                Moments of appreciation and recognition with our exhibition participants and team.
+              </figcaption>
             </figure>
           </div>
         </div>

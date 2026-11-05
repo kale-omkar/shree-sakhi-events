@@ -123,8 +123,8 @@ export default function AdminPanel() {
   };
 
   // -- Cloudinary Image Upload --
-  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'ezu019bn';
+  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'shree_sakhi_events';
 
   const uploadToCloudinary = async (file) => {
     if (!CLOUD_NAME) {
@@ -280,8 +280,31 @@ export default function AdminPanel() {
     }
     if (formData.endDate && formData.eventDate && formData.endDate < formData.eventDate)
       errs.endDate = 'End date cannot be before start date';
-    if (formData.maxCapacity && Number(formData.maxCapacity) < 1)
-      errs.maxCapacity = 'Capacity must be at least 1';
+    if (formData.maxCapacity !== '' && formData.maxCapacity !== null && formData.maxCapacity !== undefined) {
+      const cap = Number(formData.maxCapacity);
+      if (isNaN(cap) || !Number.isInteger(cap)) {
+        errs.maxCapacity = 'Capacity must be a positive whole number';
+      } else if (cap < 1) {
+        errs.maxCapacity = 'Capacity must be at least 1';
+      } else if (cap > 100000) {
+        errs.maxCapacity = 'Maximum capacity must not exceed 100,000';
+      }
+    }
+    if (formData.registeredCount !== '' && formData.registeredCount !== null && formData.registeredCount !== undefined) {
+      const reg = Number(formData.registeredCount);
+      if (isNaN(reg) || !Number.isInteger(reg)) {
+        errs.registeredCount = 'Registered count must be a whole number';
+      } else if (reg < 0) {
+        errs.registeredCount = 'Registered count cannot be negative';
+      } else if (reg > 100000) {
+        errs.registeredCount = 'Registered count must not exceed 100,000';
+      } else if (formData.maxCapacity && !errs.maxCapacity) {
+        const cap = Number(formData.maxCapacity);
+        if (reg > cap) {
+          errs.registeredCount = `Registered count (${reg}) cannot exceed maximum capacity (${cap})`;
+        }
+      }
+    }
     if (formData.contactEmail && !/\S+@\S+\.\S+/.test(formData.contactEmail))
       errs.contactEmail = 'Invalid email address';
     if (formData.contactPhone) {
@@ -312,8 +335,12 @@ export default function AdminPanel() {
         registrationStatus: formData.registrationStatus,
         imageUrl: formData.imageUrl?.trim() || null,
         bannerUrl: formData.bannerUrl?.trim() || null,
-        maxCapacity: formData.maxCapacity ? Number(formData.maxCapacity) : null,
-        registeredCount: formData.registeredCount ? Number(formData.registeredCount) : 0,
+        maxCapacity: (formData.maxCapacity !== '' && formData.maxCapacity !== null && formData.maxCapacity !== undefined)
+          ? Number(formData.maxCapacity)
+          : null,
+        registeredCount: (formData.registeredCount !== '' && formData.registeredCount !== null && formData.registeredCount !== undefined)
+          ? Number(formData.registeredCount)
+          : 0,
         highlights: formData.highlights
           ? formData.highlights.split('\n').map(s => s.trim()).filter(Boolean)
           : [],
@@ -338,6 +365,9 @@ export default function AdminPanel() {
       setView('list');
       loadEvents();
     } catch (err) {
+      if (err.fieldErrors && typeof err.fieldErrors === 'object') {
+        setFormErrors(prev => ({ ...prev, ...err.fieldErrors }));
+      }
       showToast('❌ ' + err.message, 'error');
     } finally {
       setSaving(false);
@@ -778,19 +808,44 @@ export default function AdminPanel() {
               {/* Row 5: Capacity */}
               <div className="admin-form__row admin-form__row--3">
                 <div className="form-group">
-                  <label htmlFor="admin-max-cap" className="form-label">Max Capacity</label>
-                  <input id="admin-max-cap" type="number" min="1" className={`form-input ${formErrors.maxCapacity ? 'error' : ''}`}
+                  <label htmlFor="admin-max-cap" className="form-label">
+                    Max Capacity <span className="note">(1 – 100,000)</span>
+                  </label>
+                  <input
+                    id="admin-max-cap"
+                    type="number"
+                    min="1"
+                    max="100000"
+                    step="1"
+                    className={`form-input ${formErrors.maxCapacity ? 'error' : ''}`}
                     placeholder="e.g. 5000"
                     value={formData.maxCapacity}
-                    onChange={e => setFormData(d => ({ ...d, maxCapacity: e.target.value }))}/>
+                    onChange={e => {
+                      setFormData(d => ({ ...d, maxCapacity: e.target.value }));
+                      if (formErrors.maxCapacity) setFormErrors(fe => ({ ...fe, maxCapacity: '' }));
+                    }}
+                  />
                   {formErrors.maxCapacity && <span className="form-error">⚠ {formErrors.maxCapacity}</span>}
                 </div>
                 <div className="form-group">
-                  <label htmlFor="admin-reg-count" className="form-label">Registered Count</label>
-                  <input id="admin-reg-count" type="number" min="0" className="form-input"
+                  <label htmlFor="admin-reg-count" className="form-label">
+                    Registered Count <span className="note">(0 – 100,000)</span>
+                  </label>
+                  <input
+                    id="admin-reg-count"
+                    type="number"
+                    min="0"
+                    max="100000"
+                    step="1"
+                    className={`form-input ${formErrors.registeredCount ? 'error' : ''}`}
                     placeholder="e.g. 127"
                     value={formData.registeredCount}
-                    onChange={e => setFormData(d => ({ ...d, registeredCount: e.target.value }))}/>
+                    onChange={e => {
+                      setFormData(d => ({ ...d, registeredCount: e.target.value }));
+                      if (formErrors.registeredCount) setFormErrors(fe => ({ ...fe, registeredCount: '' }));
+                    }}
+                  />
+                  {formErrors.registeredCount && <span className="form-error">⚠ {formErrors.registeredCount}</span>}
                 </div>
                 <div className="form-group">
                   <label htmlFor="admin-organizer" className="form-label">Organizer</label>
@@ -836,6 +891,16 @@ export default function AdminPanel() {
                     onChange={e => handleImageUpload(e, 'imageUrl')}
                   />
                   {uploading && <p style={{ fontSize: '0.8rem', color: 'var(--color-primary)', marginTop: '0.3rem' }}>Uploading image…</p>}
+                  <div style={{ marginTop: '0.35rem' }}>
+                    <input
+                      type="url"
+                      className={`form-input ${formErrors.imageUrl ? 'error' : ''}`}
+                      placeholder="Or enter direct image URL (https://…)"
+                      value={formData.imageUrl}
+                      onChange={e => setFormData(d => ({ ...d, imageUrl: e.target.value }))}
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </div>
                   {formData.imageUrl && (
                     <div style={{ marginTop: '0.5rem' }}>
                       <img src={formData.imageUrl} alt="Event preview" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'unset', borderRadius: '8px', border: '1px solid var(--color-border)' }} />
@@ -856,6 +921,17 @@ export default function AdminPanel() {
                     disabled={uploading}
                     onChange={e => handleImageUpload(e, 'bannerUrl')}
                   />
+                  {uploading && <p style={{ fontSize: '0.8rem', color: 'var(--color-primary)', marginTop: '0.3rem' }}>Uploading image…</p>}
+                  <div style={{ marginTop: '0.35rem' }}>
+                    <input
+                      type="url"
+                      className="form-input"
+                      placeholder="Or enter direct banner URL (https://…)"
+                      value={formData.bannerUrl}
+                      onChange={e => setFormData(d => ({ ...d, bannerUrl: e.target.value }))}
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </div>
                   {formData.bannerUrl && (
                     <div style={{ marginTop: '0.5rem' }}>
                       <img src={formData.bannerUrl} alt="Banner preview" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'unset', borderRadius: '8px', border: '1px solid var(--color-border)' }} />
