@@ -20,18 +20,7 @@ export default function GalleryPage() {
         </div>
 
         <div className="container gallery-hero__content">
-          <nav className="gallery-breadcrumbs" aria-label="Breadcrumb">
-            <Link to="/">Home</Link>
-            <span aria-hidden="true">/</span>
-            <span className="current">Gallery</span>
-          </nav>
-
-          <div className="gallery-hero__badge animate-fade-up">
-            <span className="badge-dot" aria-hidden="true" />
-            Official Exhibition Photo Gallery
-          </div>
-
-          <h1 className="gallery-hero__title animate-fade-up delay-100">
+          <h1 className="gallery-hero__title animate-fade-up">
             Moments &amp; Glimpses of
             <span className="text-gradient"> Grand Exhibitions</span>
           </h1>

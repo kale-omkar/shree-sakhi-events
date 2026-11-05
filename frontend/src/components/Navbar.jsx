@@ -135,7 +135,7 @@ export default function Navbar() {
                   ) : (
                     <Link
                       to={link.to}
-                      className={`navbar__link ${active ? 'navbar__link--active' : ''}`}
+                      className={`navbar__link ${link.to === '/admin' ? 'navbar__link--admin' : ''} ${active ? 'navbar__link--active' : ''}`}
                     >
                       {link.label}
                     </Link>
@@ -273,6 +273,17 @@ export default function Navbar() {
                 id="mobile-register-btn"
               >
                 Book Stalls / Register
+              </Link>
+            </li>
+
+            {/* Mobile Admin Link */}
+            <li className="navbar__mobile-admin-item">
+              <Link
+                to="/admin"
+                className="navbar__mobile-admin-link"
+                onClick={() => setMenuOpen(false)}
+              >
+                🔐 Admin Portal
               </Link>
             </li>
           </ul>

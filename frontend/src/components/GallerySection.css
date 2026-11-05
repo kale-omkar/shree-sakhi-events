@@ -433,11 +433,7 @@
     gap: 1.25rem;
   }
   .gallery-item,
-  .gallery-item:nth-child(1),
-  .gallery-item:nth-child(2),
-  .gallery-item:nth-child(3),
-  .gallery-item:nth-child(4),
-  .gallery-item:nth-child(5) {
+  .gallery-item:nth-child(n) {
     grid-column: span 1;
   }
   .gallery-item__image-wrap {
@@ -473,5 +469,22 @@
   }
   .gallery-lightbox__desc {
     font-size: 0.85rem;
+  }
+}
+/* -- Additional zoom / narrow viewport fixes -- */
+@media (max-width: 600px) {
+  .gallery-grid {
+    gap: 1rem;
+  }
+  .gallery-lightbox__container {
+    max-height: 98vh;
+    border-radius: var(--radius-lg);
+  }
+  .gallery-lightbox__stage {
+    min-height: 220px;
+    max-height: 40vh;
+  }
+  .gallery-lightbox__image {
+    max-height: 40vh;
   }
 }

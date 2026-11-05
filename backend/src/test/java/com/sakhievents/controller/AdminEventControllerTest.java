@@ -146,4 +146,87 @@ class AdminEventControllerTest {
         AdminEventController blankKey = new AdminEventController(adminEventService, "   ");
         assertThrows(UnauthorizedException.class, () -> blankKey.getAllEvents("any-key"));
     }
+
+    @Test
+    @DisplayName("POST /api/admin/events - returns 400 when maxCapacity exceeds 100,000")
+    void testCreateEvent_MaxCapacityExceedsLimit_Returns400() throws Exception {
+        EventRequestDTO dto = new EventRequestDTO();
+        dto.setName("Sample Event");
+        dto.setDescription("Sample Description of appropriate length");
+        dto.setEventDate(LocalDate.now().plusDays(10));
+        dto.setVenue("Sample Venue");
+        dto.setEventType("UPCOMING");
+        dto.setRegistrationStatus("OPEN");
+        dto.setCategory("Exhibition");
+        dto.setMaxCapacity(150000);
+
+        mockMvc.perform(post("/api/admin/events")
+                        .header("X-Admin-Key", TEST_ADMIN_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.data.maxCapacity").value("Maximum capacity must not exceed 100,000"));
+
+        verifyNoInteractions(adminEventService);
+    }
+
+    @Test
+    @DisplayName("POST /api/admin/events - returns 400 when maxCapacity is less than 1")
+    void testCreateEvent_MaxCapacityBelowMin_Returns400() throws Exception {
+        EventRequestDTO dto = new EventRequestDTO();
+        dto.setName("Sample Event");
+        dto.setDescription("Sample Description of appropriate length");
+        dto.setEventDate(LocalDate.now().plusDays(10));
+        dto.setVenue("Sample Venue");
+        dto.setEventType("UPCOMING");
+        dto.setRegistrationStatus("OPEN");
+        dto.setCategory("Exhibition");
+        dto.setMaxCapacity(0);
+
+        mockMvc.perform(post("/api/admin/events")
+                        .header("X-Admin-Key", TEST_ADMIN_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.data.maxCapacity").value("Maximum capacity must be at least 1"));
+
+        verifyNoInteractions(adminEventService);
+    }
+
+    @Test
+    @DisplayName("POST /api/admin/events - returns 200 when maxCapacity is valid positive integer")
+    void testCreateEvent_ValidCapacity_Returns201() throws Exception {
+        EventRequestDTO dto = new EventRequestDTO();
+        dto.setName("Sample Event");
+        dto.setDescription("Sample Description of appropriate length");
+        dto.setEventDate(LocalDate.now().plusDays(10));
+        dto.setVenue("Sample Venue");
+        dto.setEventType("UPCOMING");
+        dto.setRegistrationStatus("OPEN");
+        dto.setCategory("Exhibition");
+        dto.setMaxCapacity(5000);
+        dto.setRegisteredCount(100);
+
+        EventResponseDTO response = new EventResponseDTO();
+        response.setId(1L);
+        response.setName("Sample Event");
+        response.setMaxCapacity(5000);
+        response.setRegisteredCount(100);
+
+        when(adminEventService.createEvent(any(EventRequestDTO.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/admin/events")
+                        .header("X-Admin-Key", TEST_ADMIN_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.maxCapacity").value(5000))
+                .andExpect(jsonPath("$.data.registeredCount").value(100));
+
+        verify(adminEventService, times(1)).createEvent(any(EventRequestDTO.class));
+    }
+
 }

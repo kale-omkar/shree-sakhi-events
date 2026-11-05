@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { eventsApi } from '../api/eventsApi';
 import './EventDetailPage.css';
@@ -66,30 +66,17 @@ export default function EventDetailPage() {
   const isPast  = event.eventType === 'PAST';
 
   const galleryImages = (event.images || []).filter(Boolean);
+  const eventImage = event.imageUrl || event.bannerUrl;
 
   return (
     <main id="event-detail-page" className="event-detail-page page-layout">
-
-      {/* ── Breadcrumb ── */}
-      <div className="container breadcrumb" aria-label="Breadcrumb">
-        <Link to="/">Home</Link>
-        <span aria-hidden="true">/</span>
-        <Link to="/events">Events</Link>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">{event.name}</span>
-      </div>
 
       {/* ── Hero Banner ── */}
       <section className="event-detail__hero" aria-label={`${event.name} overview`}>
         {/* Background art & subtle ambient illumination */}
         <div className="event-detail__hero-bg" aria-hidden="true">
           <EventHeroArt category={event.category} />
-          {event.bannerUrl && (
-            <div
-              className="event-detail__hero-ambient"
-              style={{ backgroundImage: `url(${event.bannerUrl})` }}
-            />
-          )}
+
         </div>
         <div className="event-detail__hero-overlay" aria-hidden="true" />
 
@@ -148,26 +135,26 @@ export default function EventDetailPage() {
             )}
           </div>
 
-          {/* Hero Poster Showcase Card */}
-          {event.imageUrl && (
+          {/* Single Dynamic Event Image Card */}
+          {eventImage && (
             <div className="event-detail__hero-poster-wrap animate-fade-up delay-100">
               <div
                 className="event-detail__hero-poster"
-                onClick={() => setLightboxImg(event.imageUrl)}
+                onClick={() => setLightboxImg(eventImage)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && setLightboxImg(event.imageUrl)}
-                aria-label="View full event poster"
+                onKeyDown={(e) => e.key === 'Enter' && setLightboxImg(eventImage)}
+                aria-label={`View full ${event.name} image`}
                 title="Click to view full image"
               >
                 <img
-                  src={event.imageUrl}
-                  alt={`${event.name} poster`}
+                  src={eventImage}
+                  alt={`${event.name} event visual`}
                   className="event-detail__hero-poster-img"
                 />
                 <div className="event-detail__hero-poster-overlay">
                   <span className="poster-preview-pill">
-                    <ZoomIcon /> View Poster
+                    <ZoomIcon /> View Full Image
                   </span>
                 </div>
               </div>
@@ -186,32 +173,55 @@ export default function EventDetailPage() {
             <p className="detail-section__text">{event.description}</p>
           </section>
 
-          {event.bannerUrl && (
-            <section className="event-detail__banner-showcase" aria-label={`${event.name} banner`}>
-              <div className="event-detail__banner-frame">
-                <img
-                  src={event.bannerUrl}
-                  alt={`${event.name} event banner`}
-                  className="event-detail__banner-image"
-                />
-              </div>
-            </section>
-          )}
-
-          {/* Highlights */}
-          {event.highlights?.length > 0 && (
-            <section className="detail-section" aria-labelledby="highlights-heading">
-              <h2 id="highlights-heading" className="detail-section__title">Event Highlights</h2>
-              <ul className="highlights-list" role="list">
-                {event.highlights.map((h, i) => (
-                  <li key={i} className="highlights-list__item animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
-                    <span className="highlights-list__icon" aria-hidden="true">✦</span>
-                    <span>{h}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          {/* Highlights — split into Statistics and Key Highlights to avoid duplication */}
+          {event.highlights?.length > 0 && (() => {
+            const statPattern = /^\s*[\d,]+[\d,.+kK%\s]|^\s*\d|\b\d{3,}/;
+            const stats = event.highlights.filter(h => statPattern.test(h));
+            const keyHighlights = event.highlights.filter(h => !statPattern.test(h));
+            return (
+              <>
+                {stats.length > 0 && (
+                  <section className="detail-section" aria-labelledby="stats-heading">
+                    <h2 id="stats-heading" className="detail-section__title">Statistics</h2>
+                    <ul className="highlights-list" role="list">
+                      {stats.map((h, i) => (
+                        <li key={i} className="highlights-list__item animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+                          <span className="highlights-list__icon" aria-hidden="true">📊</span>
+                          <span>{h}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+                {keyHighlights.length > 0 && (
+                  <section className="detail-section" aria-labelledby="highlights-heading">
+                    <h2 id="highlights-heading" className="detail-section__title">Key Highlights</h2>
+                    <ul className="highlights-list" role="list">
+                      {keyHighlights.map((h, i) => (
+                        <li key={i} className="highlights-list__item animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+                          <span className="highlights-list__icon" aria-hidden="true">✦</span>
+                          <span>{h}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+                {stats.length === 0 && keyHighlights.length === 0 && (
+                  <section className="detail-section" aria-labelledby="highlights-heading">
+                    <h2 id="highlights-heading" className="detail-section__title">Event Highlights</h2>
+                    <ul className="highlights-list" role="list">
+                      {event.highlights.map((h, i) => (
+                        <li key={i} className="highlights-list__item animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+                          <span className="highlights-list__icon" aria-hidden="true">✦</span>
+                          <span>{h}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+              </>
+            );
+          })()}
 
           {/* Gallery Images */}
           {galleryImages.length > 0 && (

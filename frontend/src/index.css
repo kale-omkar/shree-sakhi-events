@@ -102,6 +102,8 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  /* Ensure html itself never causes horizontal scroll */
+  overflow-x: clip;
 }
 
 body {
@@ -109,7 +111,9 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   line-height: 1.65;
-  overflow-x: hidden;
+  /* Use clip instead of hidden to prevent hiding scrollbar while still clipping overflow */
+  overflow-x: clip;
+  min-width: 320px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -131,10 +135,10 @@ h1, h2, h3, h4, h5 {
   color: var(--color-text);
 }
 
-h1 { font-size: clamp(2.4rem, 4.2vw, 3.8rem); }
-h2 { font-size: clamp(1.85rem, 3.2vw, 2.85rem); }
-h3 { font-size: clamp(1.35rem, 2.2vw, 2.1rem); }
-h4 { font-size: clamp(1.1rem, 1.6vw, 1.45rem); }
+h1 { font-size: clamp(1.95rem, 3.2vw, 2.75rem); }
+h2 { font-size: clamp(1.5rem, 2.4vw, 2.1rem); }
+h3 { font-size: clamp(1.15rem, 1.8vw, 1.45rem); }
+h4 { font-size: clamp(1.02rem, 1.4vw, 1.25rem); }
 
 p {
   color: var(--color-text-muted);
@@ -169,7 +173,7 @@ input, textarea, select {
   width: 100%;
   max-width: 1480px;
   margin-inline: auto;
-  padding-inline: clamp(1.5rem, 3.5vw, 3rem);
+  padding-inline: clamp(1rem, 4vw, 3rem);
 }
 
 .sr-only {
@@ -333,15 +337,18 @@ input, textarea, select {
 }
 
 .badge-open {
-  background: #ECFDF5;
-  color: #047857;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid rgba(22, 163, 74, 0.35);
+  font-weight: 700;
 }
 
 .badge-closed {
-  background: #FEF2F2;
-  color: #B91C1C;
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  /* Darker grey background with high-contrast dark text — clearly distinct from badge-open */
+  background: #E5E7EB;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+  font-weight: 700;
 }
 
 .badge-coming {
@@ -351,9 +358,10 @@ input, textarea, select {
 }
 
 .badge-past {
-  background: var(--color-pale-pink);
-  color: var(--color-plum);
-  border: 1px solid var(--color-border);
+  background: #E5E7EB;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+  font-weight: 600;
 }
 
 .badge-cat {
@@ -494,11 +502,64 @@ input, textarea, select {
   animation: spin 0.8s linear infinite;
 }
 
-/* --- Responsive Utilities --- */
+/* --- Responsive Utilities & Zoom Compatibility --- */
+/* At 1200px: covers 125% zoom on 1440px screens, 150% on 1280px */
+@media (max-width: 1200px) {
+  .container {
+    padding-inline: clamp(1rem, 3.5vw, 2.5rem);
+  }
+}
+
+/* At 900px: covers 150% zoom on 1440px, 125% zoom on 1024px */
+@media (max-width: 900px) {
+  .container {
+    padding-inline: clamp(0.75rem, 3vw, 2rem);
+  }
+}
+
+/* At 768px: standard tablet portrait */
 @media (max-width: 768px) {
   .container { padding-inline: var(--space-md); }
   h1 { font-size: 2.15rem; }
   h2 { font-size: 1.7rem; }
   p { font-size: 1rem; }
-  .btn { width: 100%; }
+}
+
+/* At 480px: covers small mobile or high zoom */
+@media (max-width: 480px) {
+  .container {
+    padding-inline: 0.75rem;
+  }
+  .btn {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+/* Allow flex children and grid items to shrink properly without overflowing */
+:where(
+  .container,
+  main,
+  section,
+  article,
+  aside,
+  header,
+  footer,
+  [class*="layout"],
+  [class*="grid"],
+  [class*="row"],
+  [class*="wrap"]
+) > * {
+  min-width: 0;
+}
+
+/* Ensure media elements scale proportionally and never overflow */
+img,
+video,
+canvas,
+svg,
+iframe {
+  max-width: 100%;
+  height: auto;
 }

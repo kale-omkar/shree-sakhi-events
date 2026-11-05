@@ -57,6 +57,7 @@ public class EventRequestDTO {
     private Integer maxCapacity;
 
     @Min(value = 0, message = "Registered count cannot be negative")
+    @Max(value = 100000, message = "Registered count must not exceed 100,000")
     private Integer registeredCount;
 
     private List<String> highlights;
