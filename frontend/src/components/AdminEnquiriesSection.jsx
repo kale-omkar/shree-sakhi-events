@@ -329,7 +329,7 @@ export default function AdminEnquiriesSection({ showToast, onUnauthorized }) {
           ) : (
             /* Data Table */
             <div className="admin-table-wrap">
-              <table className="admin-table" style={{ width: '100%', minWidth: '900px' }} aria-label="Customer Enquiries List">
+              <table className="admin-table" style={{ width: '100%', minWidth: '780px' }} aria-label="Customer Enquiries List">
                 <thead>
                   <tr>
                     <th>Ref Code & Date</th>
