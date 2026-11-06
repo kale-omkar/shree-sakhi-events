@@ -4,24 +4,54 @@ import { getStalls, holdStalls, releaseHold } from '../api/stallApi';
 import StepIndicator from '../components/StepIndicator';
 
 /**
- * Stall Selection step — RedBus-style interactive floor plan.
- * Flow: select stalls on the map → hold them (server-side, TTL) → proceed to details.
+ * Interactive SVG-based Stall Selection — RedBus / BookMyShow style.
+ *
+ * Floor plan layout is driven entirely by live backend data (posX, posY, width, height
+ * seeded from the reference floor plan image). Category/price come from CATEGORY_SPEC.
+ * Live status (AVAILABLE / HELD / BOOKED) is fetched from the backend and overlaid.
  *
  * Session id is persisted in sessionStorage so holds survive refresh within the tab.
  * Stall status is polled every 15s to keep the map current.
  */
-const HOLD_TTL_SECONDS = 10 * 60; // matches backend default; refreshed from hold response
+const CELL = 56; // base SVG grid cell size (px)
+const AISLE = 16; // gap between grid cells
 const POLL_INTERVAL_MS = 15000;
 const MAX_SELECTION_WARN = 5;
 
-// Non-selectable floor-plan facilities — positions match SHREE_SAKHI_DEC_2026.pdf image
-const FACILITY_BLOCKS = [
-  { id: 'entry', label: 'ENTRY', top: '92%', left: '68%', w: 70, h: 28 },
-  { id: 'exit', label: 'EXIT', top: '92%', left: '2%', w: 60, h: 28 },
-  { id: 'stage', label: 'STAGE', top: '2%', left: '26%', w: 130, h: 26 },
-  { id: 'org', label: 'ORG', top: '2%', left: '47%', w: 56, h: 26 },
-  { id: 'stair', label: 'STAIR', top: '2%', left: '66%', w: 60, h: 26 },
+// Category spec — matches the reference floor plan legend exactly.
+const CATEGORY_SPEC = {
+  PREMIUM: { label: 'Premium', color: '#E67E22', price: 5000 },   // Orange
+  REGULAR: { label: 'Regular', color: '#F1C40F', price: 4000 },   // Yellow
+  CLASSIC: { label: 'Classic', color: '#2ECC71', price: 4000 },   // Light Green
+  SINGLE_TABLE: { label: 'Single Table', color: '#3498DB', price: 2500 }, // Blue
+};
+
+// Distinct status colors (not category colors)
+const STATUS_COLORS = {
+  SELECTED: '#27AE60',   // Green — selected by you
+  HELD: '#F39C12',       // Amber — temporarily reserved
+  BOOKED: '#C0392B',     // Red — already booked
+};
+
+const FACILITY_COLOR = '#95A5A6';
+
+// Non-bookable facility blocks drawn on the floor plan (positions in grid cells).
+// These match the reference floor plan: STAGE top-center, ENTRY/EXIT sides, ORG/STAIR bottom.
+const FACILITIES = [
+  { id: 'fac-stage', label: 'STAGE', gx: 3, gy: 0, w: 6, h: 1 },
+  { id: 'fac-entry', label: 'ENTRY', gx: 0, gy: 2, w: 1, h: 2 },
+  { id: 'fac-exit', label: 'EXIT', gx: 11, gy: 2, w: 1, h: 2 },
+  { id: 'fac-org', label: 'ORG', gx: 0, gy: 13, w: 2, h: 1 },
+  { id: 'fac-stair', label: 'STAIR', gx: 10, gy: 13, w: 2, h: 1 },
 ];
+
+// Parse a "LxW" size label into { length, width }.
+const parseSize = (label) => {
+  if (!label) return { length: 10, width: 7 };
+  const m = String(label).match(/(\d+)\s*[xX×]\s*(\d+)/);
+  if (m) return { length: Number(m[1]), width: Number(m[2]) };
+  return { length: 10, width: 7 };
+};
 
 export default function StallSelection() {
   const navigate = useNavigate();
@@ -48,33 +78,35 @@ export default function StallSelection() {
   const [hold, setHold] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [detail, setDetail] = useState(null); // stall detail popup
   const [timer, setTimer] = useState(0);
+  const [zoom, setZoom] = useState(1);
   const timerRef = useRef(null);
   const pollRef = useRef(null);
 
   const eventId = flow?.eventId ? Number(flow.eventId) : (location.state?.eventId || null);
   const bookerType = flow?.bookerType || location.state?.bookerType || 'VISITOR';
+  const requiresStalls = bookerType === 'EXHIBITOR' || bookerType === 'SPONSOR';
 
-  // Persist flow state whenever it changes
   useEffect(() => {
     if (flow) sessionStorage.setItem('booking_flow', JSON.stringify(flow));
   }, [flow]);
 
-  // Initialize flow with event + booker type
   useEffect(() => {
     if (eventId && (!flow || flow.eventId !== String(eventId))) {
       setFlow({ eventId: String(eventId), bookerType, stallCodes: [], holdToken: null, sessionId });
     }
   }, [eventId, flow, bookerType]);
 
-  // Fetch stalls
+  // Fetch stalls from backend — positions (posX/posY/width/height) come from the seeded floor plan.
   const fetchStalls = useCallback(async () => {
     if (!eventId) return;
     setLoading(true);
     setError(null);
     try {
       const data = await getStalls(eventId, sessionId);
-      setStalls(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      setStalls(list);
     } catch (err) {
       setError(err.message || 'Failed to load stall map. Please ensure the backend is running.');
     } finally {
@@ -84,8 +116,6 @@ export default function StallSelection() {
 
   useEffect(() => {
     fetchStalls();
-
-    // Poll stall status every 15s so the map stays current
     pollRef.current = setInterval(fetchStalls, POLL_INTERVAL_MS);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
@@ -104,9 +134,7 @@ export default function StallSelection() {
     const tick = () => {
       const remaining = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
       setTimer(remaining);
-      if (remaining <= 0) {
-        handleHoldExpiry();
-      }
+      if (remaining <= 0) handleHoldExpiry();
     };
     tick();
     timerRef.current = setInterval(tick, 1000);
@@ -119,33 +147,75 @@ export default function StallSelection() {
     setError('Your stall hold has expired. Please re-select your stalls.');
     try {
       if (hold?.holdToken) await releaseHold({ holdToken: hold.holdToken });
-    } catch { /* ignore release errors */ }
+    } catch { /* ignore */ }
     setHold(null);
     setTimer(0);
     setSelected(new Set());
+    setFlow(prev => ({ ...prev, stallCodes: [], holdToken: null }));
   };
 
-  // Toggle stall selection (only when no active hold; during hold, selections are locked)
-  const toggleStall = (stallCode) => {
-    if (hold) return; // cannot change selection while a hold is active
-    const s = stalls.find(x => x.stallCode === stallCode);
-    if (!s || s.status !== 'AVAILABLE') return;
+  // Build a live status map keyed by stall code
+  const statusMap = new Map();
+  stalls.forEach(s => statusMap.set(s.stallCode, s.status));
+
+  // Look up stall info from backend data + category spec
+  const getStallInfo = (code) => {
+    const live = stalls.find(s => s.stallCode === code);
+    if (!live) return null;
+    const catSpec = CATEGORY_SPEC[live.stallType] || CATEGORY_SPEC.REGULAR;
+    const size = parseSize(live.sizeLabel);
+    return {
+      code: live.stallCode,
+      category: live.stallType,
+      label: catSpec.label,
+      color: catSpec.color,
+      price: live.price != null ? Number(live.price) : catSpec.price,
+      length: size.length,
+      width: size.width,
+      area: size.length * size.width,
+      posX: live.posX != null ? Number(live.posX) : 0,
+      posY: live.posY != null ? Number(live.posY) : 0,
+      gridW: live.width != null ? Number(live.width) : 1,
+      gridH: live.height != null ? Number(live.height) : 1,
+      status: live.status || 'AVAILABLE',
+    };
+  };
+
+  const toggleStall = (code) => {
+    if (hold) return; // locked while a hold is active
+    if (!requiresStalls) return;
+    const info = getStallInfo(code);
+    if (!info || info.status !== 'AVAILABLE') return;
     setSelected(prev => {
       const next = new Set(prev);
-      if (next.has(stallCode)) next.delete(stallCode);
-      else next.add(stallCode);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
       return next;
     });
     setError(null);
+    setDetail(null);
+  };
+
+  const selectStall = (code) => {
+    if (!requiresStalls) return;
+    const info = getStallInfo(code);
+    if (!info || info.status !== 'AVAILABLE') return;
+    setDetail(info);
   };
 
   const selectedStalls = stalls.filter(s => selected.has(s.stallCode));
-  const subtotal = selectedStalls.reduce((sum, s) => sum + Number(s.price || 0), 0);
+  const subtotal = selectedStalls.reduce((sum, s) => {
+    const spec = CATEGORY_SPEC[s.stallType] || CATEGORY_SPEC.REGULAR;
+    return sum + spec.price;
+  }, 0);
+  const totalArea = selectedStalls.reduce((sum, s) => {
+    const size = parseSize(s.sizeLabel);
+    return sum + (size.length * size.width);
+  }, 0);
 
   const canProceed = selectedStalls.length > 0;
   const exceedsLimit = selectedStalls.length > MAX_SELECTION_WARN;
 
-  // Hold the selected stalls server-side
   const handleProceed = async () => {
     if (!canProceed || !eventId) return;
     if (exceedsLimit) {
@@ -160,7 +230,6 @@ export default function StallSelection() {
         sessionId,
       };
       const res = await holdStalls(payload);
-      // Persist hold + selection into flow
       setFlow(prev => ({ ...prev, stallCodes: Array.from(selected), holdToken: res.holdToken, sessionId }));
       setHold({
         holdToken: res.holdToken,
@@ -168,7 +237,6 @@ export default function StallSelection() {
         total: res.total,
         heldStalls: res.heldStalls || [],
       });
-      // Mark selected stalls as SELECTED on the map
       setSelected(new Set(Array.from(selected)));
     } catch (err) {
       const msg = err.message || 'Hold failed. Please try again.';
@@ -177,7 +245,6 @@ export default function StallSelection() {
       } else {
         setError(msg);
       }
-      // Refresh map to reflect current availability
       await fetchStalls();
     }
   };
@@ -191,6 +258,7 @@ export default function StallSelection() {
     setTimer(0);
     setSelected(new Set());
     setFlow(prev => ({ ...prev, stallCodes: [], holdToken: null, sessionId }));
+    setDetail(null);
   };
 
   const handleContinueToDetails = () => {
@@ -202,29 +270,46 @@ export default function StallSelection() {
         stallCodes: Array.from(selected),
         holdToken: hold.holdToken,
         amount: hold.total,
+        sessionId,
       },
     });
   };
 
   const handleBack = () => {
-    // Release any hold when going back
     if (hold?.holdToken) {
       releaseHold({ holdToken: hold.holdToken }).catch(() => {});
     }
     setHold(null);
     setSelected(new Set());
+    setDetail(null);
     navigate('/book');
   };
+
+  const handleClear = () => {
+    setSelected(new Set());
+    setDetail(null);
+    setError(null);
+  };
+
+  const handleZoomIn = () => setZoom(z => Math.min(z + 0.25, 2.5));
+  const handleZoomOut = () => setZoom(z => Math.max(z - 0.25, 0.6));
+  const handleReset = () => setZoom(1);
 
   const completed = new Set([1]);
   if (flow?.stallCodes && flow.stallCodes.length > 0) completed.add(2);
 
-  const categoryColors = {
-    PREMIUM: 'var(--color-primary-dark)',
-    REGULAR: 'var(--color-plum)',
-    CLASSIC: '#6B21A7',
-    SINGLE_TABLE: 'var(--color-gold-dark)',
-  };
+  // SVG dimensions from backend positions (grid cells)
+  const allItems = [...stalls, ...FACILITIES];
+  const maxGx = Math.max(
+    ...allItems.map(i => (i.posX != null ? i.posX : i.gx) + (i.width != null ? i.width : i.w)),
+    0
+  );
+  const maxGy = Math.max(
+    ...allItems.map(i => (i.posY != null ? i.posY : i.gy) + (i.height != null ? i.height : i.h)),
+    0
+  );
+  const svgWidth = (maxGx + 2) * (CELL + AISLE);
+  const svgHeight = (maxGy + 3) * (CELL + AISLE);
 
   if (loading) {
     return (
@@ -240,7 +325,7 @@ export default function StallSelection() {
     );
   }
 
-  if (error && !hold && stalls.length === 0) {
+  if (error && stalls.length === 0 && !hold) {
     return (
       <main className="stall-page">
         <div className="container" style={{ paddingTop: 'var(--space-xl)' }}>
@@ -249,7 +334,7 @@ export default function StallSelection() {
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-error)' }}>
             {error}
             <br /><br />
-            <button className="btn btn-outline" onClick={fetchStalls} onKeyDown={e => e.key === 'Enter' && fetchStalls()}>Retry</button>
+            <button className="btn btn-outline" onClick={fetchStalls}>Retry</button>
             {'  '}
             <Link to="/book" className="btn btn-ghost">Back to Event</Link>
           </div>
@@ -257,12 +342,6 @@ export default function StallSelection() {
       </main>
     );
   }
-
-  // Build grid positions: if all stalls have default (0,0,1x1), auto-assign sequential positions
-  const allDefault = stalls.every(s => (s.posX || 0) === 0 && (s.posY || 0) === 0 && (s.width || 1) === 1 && (s.height || 1) === 1);
-  const positioned = allDefault
-    ? stalls.map((s, i) => ({ ...s, gridCol: (i % 8) + 1, gridRow: Math.floor(i / 8) + 1, spanCol: 1, spanRow: 1 }))
-    : stalls.map(s => ({ ...s, gridCol: (s.posX || 0) + 1, gridRow: (s.posY || 0) + 1, spanCol: s.width || 1, spanRow: s.height || 1 }));
 
   return (
     <main className="stall-page" id="stall-selection-page">
@@ -272,184 +351,375 @@ export default function StallSelection() {
         <header className="stall-header">
           <Link to="/book" className="stall-back" onKeyDown={e => e.key === 'Enter' && handleBack()}>&larr; Back to Event</Link>
           <div>
-            <h1>Select Your Stall(s)</h1>
-            <p>
-              Choose your stall(s) on the floor plan. Selected stalls are held for you while you complete your details.
-              {bookerType === 'VISITOR' && <span style={{ color: 'var(--color-text-muted)' }}> (Visitors do not select stalls)</span>}
-            </p>
+            <h1>Book Your Stall</h1>
+            <p>Select your preferred exhibition space on the interactive floor plan.</p>
           </div>
         </header>
+
+        {/* ── Category Legend ── */}
+        <div className="stall-legend">
+          <span className="legend-title">Stall Categories</span>
+          {Object.entries(CATEGORY_SPEC).map(([key, spec]) => (
+            <div key={key} className="legend-item">
+              <span className="legend-swatch" style={{ backgroundColor: spec.color }} aria-hidden="true" />
+              <span>{spec.label}</span>
+              <span className="legend-price">₹{spec.price.toLocaleString('en-IN')}</span>
+            </div>
+          ))}
+          <div className="legend-item legend-item--facility">
+            <span className="legend-swatch" style={{ backgroundColor: FACILITY_COLOR }} aria-hidden="true" />
+            <span>Facility (non-bookable)</span>
+          </div>
+          <div className="legend-item legend-item--status">
+            <span className="legend-swatch legend-swatch--selected" aria-hidden="true" />
+            <span>Selected by you</span>
+          </div>
+          <div className="legend-item legend-item--status">
+            <span className="legend-swatch legend-swatch--held" aria-hidden="true" />
+            <span>Temporarily reserved</span>
+          </div>
+          <div className="legend-item legend-item--status">
+            <span className="legend-swatch legend-swatch--booked" aria-hidden="true" />
+            <span>Already booked</span>
+          </div>
+        </div>
 
         {error && (
           <div className="stall-error" role="alert">⚠️ {error}</div>
         )}
 
-        {/* ── Map ── */}
-        <section className="stall-map-section">
-          <div className="stall-legend">
-            <div className="legend-item"><span className="legend-swatch legend-swatch--available" aria-hidden="true" />Available</div>
-            <div className="legend-item"><span className="legend-swatch legend-swatch--selected" aria-hidden="true" />Selected by you</div>
-            <div className="legend-item"><span className="legend-swatch legend-swatch--held" aria-hidden="true" />Held by others</div>
-            <div className="legend-item"><span className="legend-swatch legend-swatch--booked" aria-hidden="true" />Booked</div>
-            <div className="legend-item facility-legend">
-              <span className="legend-swatch legend-swatch--facility" aria-hidden="true" />Facility (non-bookable)
-            </div>
-          </div>
-
-          <div className="stall-map" role="grid" aria-label="Event floor plan">
-            {/* Facility blocks (non-selectable) */}
-            {FACILITY_BLOCKS.map(block => (
-              <div
-                key={block.id}
-                className="map-block"
-                style={{
-                  top: block.top, left: block.left, right: block.right,
-                  width: block.w, height: block.h,
-                  position: 'absolute',
-                }}
-                title={block.label}
-                aria-label={`${block.label} area — not bookable`}
-              >
-                {block.label}
-              </div>
-            ))}
-            {/* Stalls */}
-            {positioned.map((stall) => {
-              const isSelected = selected.has(stall.stallCode);
-              const isHeldByUs = hold && hold.heldStalls.some(h => h.stallCode === stall.stallCode);
-              let stateClass = 'stall-cell--available';
-              let isInteractive = true;
-              if (stall.status === 'BOOKED') { stateClass = 'stall-cell--booked'; isInteractive = false; }
-              else if (stall.status === 'HELD' && !isHeldByUs) { stateClass = 'stall-cell--held'; isInteractive = false; }
-              else if (isSelected || isHeldByUs) { stateClass = 'stall-cell--selected'; }
-
-              const category = (stall.stallType || 'REGULAR').toUpperCase();
-              const priceText = stall.price != null ? `₹${Number(stall.price).toLocaleString('en-IN')}` : '—';
-
-              return (
-                <div
-                  key={stall.stallCode}
-                  className={`stall-cell ${stateClass} stall-cell--${category.toLowerCase().replace('_', '-')}`}
-                  style={{
-                    gridColumn: `${stall.gridCol} / span ${stall.spanCol}`,
-                    gridRow: `${stall.gridRow} / span ${stall.spanRow}`,
-                  }}
-                  role="gridcell"
-                  aria-label={`Stall ${stall.stallCode}, ${stall.sizeLabel || 'size pending'}, ${category}, ${priceText}, ${stall.status}`}
-                  aria-pressed={isSelected}
-                  tabIndex={isInteractive ? 0 : -1}
-                  onClick={() => isInteractive && toggleStall(stall.stallCode)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      if (isInteractive) toggleStall(stall.stallCode);
-                    }
-                  }}
-                  title={`Stall ${stall.stallCode} — ${stall.sizeLabel || 'size pending'} — ${category} — ${priceText} — ${stall.status}`}
-                >
-                  <span className="stall-cell__badge">{stall.stallCode}</span>
-                  <span className="stall-cell__price">{priceText}</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ── Sticky Summary ── */}
-        <aside className="stall-summary">
-          <div className="stall-summary__title">
-            {hold ? 'Hold Active' : 'Selected Stalls'}
-          </div>
-
-          {hold ? (
-            <div className="stall-summary__timer">
-              Hold expires in {Math.floor(timer / 60)}m {timer % 60}s
-              {timer <= 0 && <span> — releasing…</span>}
-            </div>
-          ) : null}
-
-          {selectedStalls.length > 0 ? (
-            <div className="stall-summary__list">
-              {selectedStalls.map(s => (
-                <div key={s.stallCode} className="stall-summary__item">
-                  <span>
-                    Stall {s.stallCode} ({s.sizeLabel || 'size pending'}) — {(s.stallType || 'Regular')}
-                  </span>
-                  <span>₹{Number(s.price || 0).toLocaleString('en-IN')}</span>
-                  {!hold && (
-                    <button
-                      className="stall-summary__item__remove"
-                      onClick={() => toggleStall(s.stallCode)}
-                      onKeyDown={e => e.key === 'Enter' && toggleStall(s.stallCode)}
-                      title={`Remove stall ${s.stallCode}`}
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="stall-summary__empty">No stalls selected</div>
-          )}
-
-          <div className="stall-summary__divider" />
-          <div className="stall-summary__total">
-            <span>Grand Total</span>
-            <span>₹{hold ? Number(hold.total || subtotal).toLocaleString('en-IN') : subtotal.toLocaleString('en-IN')}</span>
-          </div>
-
-          {bookerType === 'VISITOR' ? (
-            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
-              Visitors do not require stalls. Proceed without selecting any.
-            </div>
-          ) : null}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-            {!hold ? (
-              <button
-                id="proceed-hold-btn"
-                className="btn btn-primary stall-summary__cta"
-                onClick={handleProceed}
-                disabled={!canProceed || exceedsLimit || loading}
-              >
-                {exceedsLimit ? `Max ${MAX_SELECTION_WARN} stalls` : canProceed ? 'Hold Selected Stalls →' : 'Select at least 1 stall'}
-              </button>
-            ) : (
-              <>
-                <button
-                  id="release-hold-btn"
-                  className="btn btn-outline stall-summary__cta"
-                  onClick={handleRelease}
-                >
-                  Release &amp; Re-select
-                </button>
-                <button
-                  id="continue-details-btn"
-                  className="btn btn-primary stall-summary__cta"
-                  onClick={handleContinueToDetails}
-                  disabled={!hold}
-                >
-                  Continue to Details →
-                </button>
-              </>
-            )}
-            <button
-              id="back-btn"
-              className="btn btn-ghost stall-summary__cta"
-              onClick={handleBack}
-              onKeyDown={e => e.key === 'Enter' && handleBack()}
-            >
-              ← Back to Event
+        {!requiresStalls && (
+          <div className="stall-visitor-note">
+            Visitors do not require stalls. Proceed without selecting any.
+            <button className="btn btn-primary" onClick={handleContinueToDetails} disabled={!hold}>
+              Continue to Details →
             </button>
           </div>
+        )}
 
-          <div style={{ marginTop: 'var(--space-md)', fontSize: '0.78rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-            <strong>How it works:</strong> Choose your stall(s), then "Hold Selected Stalls" to reserve them for
-            10 minutes while you complete your details. The total is calculated by the server from stall prices —
-            never from the browser. If another user books a stall first, you'll be prompted to pick another.
-          </div>
-        </aside>
+        {/* ── Main: Floor Plan + Summary ── */}
+        <div className="stall-main">
+          {/* LEFT: Floor Plan */}
+          <section className="stall-map-section">
+            <div className="stall-map-controls">
+              <button className="btn btn-outline btn-sm" onClick={handleZoomOut} title="Zoom out">− Zoom Out</button>
+              <button className="btn btn-outline btn-sm" onClick={handleReset} title="Reset view">Reset View</button>
+              <button className="btn btn-outline btn-sm" onClick={handleZoomIn} title="Zoom in">Zoom In +</button>
+              <button className="btn btn-outline btn-sm" onClick={handleClear} title="Clear selection">Clear Selection</button>
+              <span className="zoom-indicator">{(zoom * 100).toFixed(0)}%</span>
+            </div>
+
+            <div className="stall-map-wrapper" style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
+              <svg
+                width={svgWidth}
+                height={svgHeight}
+                viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                className="stall-svg"
+                role="graphics-document"
+                aria-label="Exhibition floor plan"
+              >
+                <defs>
+                  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.25" />
+                  </filter>
+                </defs>
+
+                {/* ── Facility Blocks (non-bookable) ── */}
+                {FACILITIES.map(fac => {
+                  const x = fac.gx * (CELL + AISLE);
+                  const y = (fac.gy + 1) * (CELL + AISLE);
+                  const w = fac.w * (CELL + AISLE) - AISLE;
+                  const h = fac.h * (CELL + AISLE) - AISLE;
+                  return (
+                    <g key={fac.id} className="facility-group">
+                      <rect
+                        x={x} y={y} width={w} height={h}
+                        className="facility-rect"
+                        fill={FACILITY_COLOR}
+                        stroke="#7F8C8D"
+                        strokeWidth="2"
+                        rx="6"
+                        filter="url(#shadow)"
+                      />
+                      <text
+                        x={x + w / 2} y={y + h / 2 + 5}
+                        textAnchor="middle"
+                        fill="#FFFFFF"
+                        fontSize="11"
+                        fontWeight="800"
+                        fontFamily="var(--font-ui)"
+                        pointerEvents="none"
+                      >
+                        {fac.label}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* ── Stalls ── */}
+                {stalls.map(stall => {
+                  const info = getStallInfo(stall.stallCode);
+                  const isSelected = selected.has(stall.stallCode);
+                  const isHeldByUs = hold && hold.heldStalls.some(h => h.stallCode === stall.stallCode);
+                  const catColor = info ? info.color : '#95A5A6';
+
+                  let stateClass = 'available';
+                  let isInteractive = true;
+                  let cursor = 'pointer';
+                  if (info.status === 'BOOKED') { stateClass = 'booked'; isInteractive = false; cursor = 'not-allowed'; }
+                  else if (info.status === 'HELD' && !isHeldByUs) { stateClass = 'held'; isInteractive = false; cursor = 'not-allowed'; }
+                  else if (isSelected || isHeldByUs) { stateClass = 'selected'; }
+
+                  const x = info.posX * (CELL + AISLE);
+                  const y = (info.posY + 1) * (CELL + AISLE);
+                  const w = info.gridW * (CELL + AISLE) - AISLE;
+                  const h = Math.max(CELL, info.gridH * (CELL + AISLE) - AISLE);
+
+                  const fillColor = stateClass === 'selected'
+                    ? STATUS_COLORS.SELECTED
+                    : stateClass === 'booked'
+                    ? STATUS_COLORS.BOOKED
+                    : stateClass === 'held'
+                    ? STATUS_COLORS.HELD
+                    : catColor;
+
+                  const strokeColor = stateClass === 'selected'
+                    ? '#1E8449'
+                    : stateClass === 'booked'
+                    ? '#7B241C'
+                    : stateClass === 'held'
+                    ? '#B9770E'
+                    : '#34495E';
+
+                  return (
+                    <g
+                      key={stall.stallCode}
+                      className={`stall-group stall-${stateClass}`}
+                      transform={`translate(${x},${y})`}
+                    >
+                      <rect
+                        x={0} y={0} width={w} height={h}
+                        className={`stall-rect stall-rect--${stateClass}`}
+                        fill={fillColor}
+                        stroke={strokeColor}
+                        strokeWidth={stateClass === 'selected' ? 3 : 2}
+                        rx={6}
+                        filter={stateClass === 'selected' ? 'url(#shadow)' : 'none'}
+                        onClick={isInteractive ? () => toggleStall(stall.stallCode) : () => selectStall(stall.stallCode)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            if (isInteractive) toggleStall(stall.stallCode);
+                            else selectStall(stall.stallCode);
+                          }
+                        }}
+                        tabIndex={isInteractive ? 0 : -1}
+                        role="button"
+                        aria-label={`Stall ${stall.stallCode}, ${info.label}, ₹${info.price.toLocaleString('en-IN')}, ${info.status}`}
+                        aria-pressed={isSelected}
+                        style={{ cursor }}
+                      />
+                      <text
+                        x={w / 2} y={h / 2 - 6}
+                        textAnchor="middle"
+                        fill={stateClass === 'booked' ? '#95A5A6' : '#FFFFFF'}
+                        fontSize="12"
+                        fontWeight="800"
+                        fontFamily="var(--font-display)"
+                        pointerEvents="none"
+                        letterSpacing="0.05em"
+                      >
+                        {stall.stallCode}
+                      </text>
+                      {isSelected && (
+                        <text
+                          x={w / 2} y={h / 2 + 10}
+                          textAnchor="middle"
+                          fill="#FFFFFF"
+                          fontSize="10"
+                          fontWeight="700"
+                          fontFamily="var(--font-ui)"
+                          pointerEvents="none"
+                          opacity="0.95"
+                        >
+                          ✔
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+
+            <div className="stall-map-footer">
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                Each stall is individually clickable. Green check = selected. Amber = temporarily reserved. Red = already booked.
+              </p>
+            </div>
+          </section>
+
+          {/* RIGHT: Booking Summary */}
+          <aside className="stall-summary">
+            <div className="stall-summary__title">
+              {hold ? 'Hold Active' : 'Booking Summary'}
+            </div>
+
+            {hold ? (
+              <div className="stall-summary__timer">
+                Hold expires in {Math.floor(timer / 60)}m {timer % 60}s
+                {timer <= 0 && <span style={{ color: 'var(--color-error)' }}> — releasing…</span>}
+              </div>
+            ) : null}
+
+            {detail && (
+              <div className="stall-detail-panel">
+                <button className="stall-detail__close" onClick={() => setDetail(null)}>&times;</button>
+                <div className="stall-detail__header">
+                  <span className="stall-detail__code">Stall {detail.code}</span>
+                  <span className="stall-detail__category" style={{ color: detail.color }}>
+                    {detail.label}
+                  </span>
+                </div>
+                <div className="stall-detail__grid">
+                  <div className="stall-detail__row">
+                    <span className="stall-detail__label">Dimensions</span>
+                    <span className="stall-detail__value">{detail.length} ft × {detail.width} ft</span>
+                  </div>
+                  <div className="stall-detail__row">
+                    <span className="stall-detail__label">Area</span>
+                    <span className="stall-detail__value">{detail.area} sq. ft.</span>
+                  </div>
+                  <div className="stall-detail__row">
+                    <span className="stall-detail__label">Price</span>
+                    <span className="stall-detail__value">₹{detail.price.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="stall-detail__row">
+                    <span className="stall-detail__label">Status</span>
+                    <span className={`stall-detail__status stall-detail__status--${detail.status}`}>
+                      {detail.status === 'AVAILABLE' ? 'Available' : detail.status === 'HELD' ? 'Reserved' : 'Booked'}
+                    </span>
+                  </div>
+                </div>
+                {detail.status === 'AVAILABLE' && (
+                  <button
+                    className="btn btn-primary stall-detail__select"
+                    onClick={() => { toggleStall(detail.code); }}
+                    disabled={exceedsLimit}
+                  >
+                    {exceedsLimit ? `Max ${MAX_SELECTION_WARN} stalls` : 'Select Stall'}
+                  </button>
+                )}
+                {detail.status === 'BOOKED' && (
+                  <div className="stall-detail__booked">Already booked — please choose another stall.</div>
+                )}
+              </div>
+            )}
+
+            {selectedStalls.length > 0 ? (
+              <div className="stall-summary__list">
+                <div className="stall-summary__header">
+                  <span>Selected ({selectedStalls.length})</span>
+                  <span>Total</span>
+                </div>
+                {selectedStalls.map(s => {
+                  const info = getStallInfo(s.stallCode);
+                  const price = info ? info.price : 0;
+                  const size = parseSize(s.sizeLabel);
+                  const area = size.length * size.width;
+                  return (
+                    <div key={s.stallCode} className="stall-summary__item">
+                      <div className="stall-summary__item__info">
+                        <span className="stall-summary__item__code">Stall {s.stallCode}</span>
+                        <span className="stall-summary__item__meta">
+                          {info ? info.label : s.stallType} • {size.length}×{size.width}ft • {area} sq.ft.
+                        </span>
+                      </div>
+                      <span className="stall-summary__item__price">₹{price.toLocaleString('en-IN')}</span>
+                      <button
+                        className="stall-summary__item__remove"
+                        onClick={() => toggleStall(s.stallCode)}
+                        title={`Remove stall ${s.stallCode}`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="stall-summary__empty">No stalls selected</div>
+            )}
+
+            <div className="stall-summary__divider" />
+            <div className="stall-summary__total">
+              <div className="stall-summary__total__row">
+                <span>Total Stalls</span>
+                <span>{selectedStalls.length}</span>
+              </div>
+              <div className="stall-summary__total__row">
+                <span>Total Area</span>
+                <span>{totalArea} sq. ft.</span>
+              </div>
+              <div className="stall-summary__total__row stall-summary__total__row--amount">
+                <span>Total Amount</span>
+                <span>₹{subtotal.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            {bookerType === 'VISITOR' ? (
+              <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
+                Visitors do not require stalls. Proceed without selecting any.
+              </div>
+            ) : null}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+              {!hold ? (
+                <button
+                  id="proceed-hold-btn"
+                  className="btn btn-primary stall-summary__cta"
+                  onClick={handleProceed}
+                  disabled={!canProceed || exceedsLimit || loading}
+                >
+                  {exceedsLimit ? `Max ${MAX_SELECTION_WARN} stalls` : canProceed
+                    ? `Hold Selected Stalls for ₹${subtotal.toLocaleString('en-IN')} →`
+                    : 'Select at least 1 stall'}
+                </button>
+              ) : (
+                <>
+                  <button
+                    id="release-hold-btn"
+                    className="btn btn-outline stall-summary__cta"
+                    onClick={handleRelease}
+                  >
+                    Release &amp; Re-select
+                  </button>
+                  <button
+                    id="continue-details-btn"
+                    className="btn btn-primary stall-summary__cta"
+                    onClick={handleContinueToDetails}
+                    disabled={!hold}
+                  >
+                    Continue to Details →
+                  </button>
+                </>
+              )}
+              <button
+                id="back-btn"
+                className="btn btn-ghost stall-summary__cta"
+                onClick={handleBack}
+                onKeyDown={e => e.key === 'Enter' && handleBack()}
+              >
+                ← Back to Event
+              </button>
+            </div>
+
+            <div style={{ marginTop: 'var(--space-md)', fontSize: '0.78rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+              <strong>How it works:</strong> Choose your stall(s), then "Hold Selected Stalls" to reserve them for
+              10 minutes while you complete your details. The total is calculated by the server from stall prices —
+              never from the browser. If another user books a stall first, you'll be prompted to pick another.
+            </div>
+          </aside>
+        </div>
       </div>
     </main>
   );
