@@ -19,6 +19,7 @@ import GalleryPage from './pages/GalleryPage';
 import AdminPanel from './pages/AdminPanel';
 import ContactPage from './pages/ContactPage';
 import EnquiryPage from './pages/EnquiryPage';
+import StallLayoutTester from './pages/StallLayoutTester';
 import './App.css';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
         <Route path="/book/status" element={<BookingStatusPage />} />
         <Route path="/booking-status" element={<BookingStatusPage />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/admin/layout-tester" element={<StallLayoutTester />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/enquiry" element={<EnquiryPage />} />
         {/* 404 fallback */}

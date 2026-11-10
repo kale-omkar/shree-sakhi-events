@@ -1,22 +1,28 @@
 package com.sakhievents.controller.stall;
 
 import com.sakhievents.dto.ApiResponse;
+import com.sakhievents.dto.stall.StallConfiguration;
 import com.sakhievents.dto.stall.StallDTO;
 import com.sakhievents.dto.stall.StallHoldRequest;
 import com.sakhievents.dto.stall.StallHoldResponse;
 import com.sakhievents.dto.stall.StallReleaseRequest;
 import com.sakhievents.exception.StallConflictException;
+import com.sakhievents.service.stall.StallLayoutParserService;
 import com.sakhievents.service.stall.StallService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
- * Stall endpoints for the Stall Selection step.
+ * Stall endpoints for the Stall Selection step and layout processing.
  * Public endpoints — no admin key required.
  */
 @RestController
@@ -25,6 +31,9 @@ public class StallController {
 
     @Autowired
     private StallService stallService;
+
+    @Autowired
+    private StallLayoutParserService layoutParserService;
 
     /**
      * GET /api/events/{eventId}/stalls
@@ -62,5 +71,35 @@ public class StallController {
 
         stallService.releaseHold(request.getHoldToken(), request.getSessionId());
         return ResponseEntity.ok(ApiResponse.success("Hold released", null));
+    }
+
+    /**
+     * POST /api/stalls/parse-layout
+     * Upload an event stall floor plan image to extract color-coded stall bounding boxes via OpenCV.
+     */
+    @PostMapping(value = "/stalls/parse-layout", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<List<StallConfiguration>>> parseLayout(
+            @RequestParam("file") MultipartFile file) throws IOException {
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Please provide a valid layout image file"));
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        String extension = (originalFilename != null && originalFilename.lastIndexOf('.') > 0)
+                ? originalFilename.substring(originalFilename.lastIndexOf('.'))
+                : ".png";
+
+        File tempFile = File.createTempFile("layout_upload_", extension);
+        try {
+            file.transferTo(tempFile);
+            List<StallConfiguration> configs = layoutParserService.processLayoutImage(tempFile.getAbsolutePath());
+            return ResponseEntity.ok(ApiResponse.success("Parsed " + configs.size() + " stall configurations", configs));
+        } finally {
+            if (tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
     }
 }
