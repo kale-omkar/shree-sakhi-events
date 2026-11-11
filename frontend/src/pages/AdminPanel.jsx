@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { adminEventsApi } from '../api/adminApi';
 import AdminBookingsSection from '../components/AdminBookingsSection';
 import AdminEnquiriesSection from '../components/AdminEnquiriesSection';
-import StallLayoutTester from './StallLayoutTester';
 import './AdminPanel.css';
 
 const EMPTY_FORM = {
@@ -512,19 +511,7 @@ export default function AdminPanel() {
           >
             📬 Enquiries
           </button>
-          <button
-            type="button"
-            className={`btn btn-sm ${activeTab === 'layout-tester' ? 'btn-primary' : 'btn-ghost'}`}
-            onClick={() => setActiveTab('layout-tester')}
-            id="admin-tab-layout-tester"
-          >
-            🗺️ Layout Vision Tester
-          </button>
         </div>
-
-        {activeTab === 'layout-tester' && (
-          <StallLayoutTester />
-        )}
 
         {activeTab === 'bookings' && (
           <AdminBookingsSection showToast={showToast} />

@@ -2,57 +2,31 @@
 # Shree Sakhi Events — .gitignore
 # =============================================
 
-# ── Environment & Secrets ──────────────────────────
+# ── Environment / Secrets ──────────────────────────
 .env
 .env.local
 .env.*.local
 *.env
 **/.env
-docs
+
 # ── Frontend (React + Vite) ────────────────────────
 frontend/node_modules/
-node_modules/
 frontend/dist/
-dist/
-dist-ssr/
 frontend/.vite/
-.vite/
 frontend/.cache/
-.cache/
 frontend/coverage/
-coverage/
-*.local
+frontend/.DS_Store
 
-# ── Backend (Spring Boot / Maven / Java) ───────────
+# ── Backend (Spring Boot / Maven) ─────────────────
 backend/target/
-target/
-*.class
-*.jar
-*.war
-*.ear
-*.nar
-!**/test/**/*.jar
 backend/.mvn/wrapper/maven-wrapper.jar
-**/.mvn/wrapper/maven-wrapper.jar
-!**/.mvn/wrapper/maven-wrapper.properties
+!backend/.mvn/wrapper/maven-wrapper.properties
 backend/.settings/
 backend/.classpath
 backend/.project
 backend/.factorypath
 backend/hs_err_pid*.log
 backend/*.log
-*.log
-logs/
-
-# ── Computer Vision / OpenCV & Debug Artifacts ─────
-debug_*.png
-debug_*.jpg
-scratch_*.png
-scratch_*.jpg
-*-detected-*.jpg
-*-detected-*.png
-**/verified-detected-stalls.jpg
-**/scratch/
 
 # ── IDE & Editor Files ────────────────────────────
 .idea/
@@ -61,27 +35,27 @@ scratch_*.jpg
 *.ipr
 .vscode/
 *.code-workspace
-.settings/
-.classpath
-.project
-.factorypath
+.DS_Store
+Thumbs.db
+Desktop.ini
 
-# ── AI Agents & Tooling ───────────────────────────
-.gemini/
-.antigravity/
-.cursor/
-.claude/
-.windsurf/
+# ── Java / Spring Build Artifacts ─────────────────
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+!**/test/**/*.jar
 
-# ── Node / Package Managers ────────────────────────
+# ── Node ──────────────────────────────────────────
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 .pnp
 .pnp.js
 
-# ── OS & Temporary Files ───────────────────────────
+# ── OS Files ──────────────────────────────────────
 .DS_Store
 .DS_Store?
 ._*
@@ -89,11 +63,3 @@ pnpm-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
-Desktop.ini
-*.tmp
-*.temp
-*.swp
-*.swo
-*~
-*.bak
-~$*

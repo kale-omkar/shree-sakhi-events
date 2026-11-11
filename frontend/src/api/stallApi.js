@@ -58,18 +58,3 @@ export const releaseHold = (payload) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   }).then(handleResponse);
-
-/**
- * POST /api/stalls/parse-layout
- * Send an image file to OpenCV computer vision pipeline on backend.
- * @param {File} file
- * @returns {Promise<Array<{category: string, xPercent: number, yPercent: number, widthPercent: number, heightPercent: number}>>}
- */
-export const parseStallLayout = (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  return safeFetch(`${BASE_URL}/stalls/parse-layout`, {
-    method: 'POST',
-    body: formData,
-  }).then(handleResponse);
-};
